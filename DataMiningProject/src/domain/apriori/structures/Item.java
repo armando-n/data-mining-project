@@ -6,7 +6,6 @@ package domain.apriori.structures;
 public class Item implements Comparable<Item> {
     
     private ItemID id;
-    private int frequency;
 
     public Item(Integer id) {
         this.id = new IntegerItemID(id);
@@ -17,10 +16,6 @@ public class Item implements Comparable<Item> {
 
     public ItemID getID() {
         return id;
-    }
-    
-    public int getFrequency() {
-        return frequency;
     }
     
     @Override

@@ -12,7 +12,7 @@ public abstract class Node {
     private static Integer RIGHT = 2;
     private static int bucketSize = 3; // the number of itemsets allowed per bucket (unless there are no more items to hash in the itemset being added)
     
-    protected Set<Set<Item>> bucket; // either a set of itemsets (a bucket), or null
+    protected Set<ItemSet> bucket; // either a set of itemsets (a bucket), or null
     private Node left;
     private Node middle;
     private Node right;
@@ -25,7 +25,7 @@ public abstract class Node {
     }
     
     /** @return This node's bucket (set of itemsets), or null if this node has no bucket. **/
-    public Set<Set<Item>> getBucket() {
+    public Set<ItemSet> getBucket() {
         return bucket;
     }
     

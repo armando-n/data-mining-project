@@ -1,9 +1,5 @@
 package domain.apriori.structures;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
 /*
  * This class represents a hash tree in which the interior nodes are hash
  * nodes, which have a null value, and the leaf nodes are bucket nodes,
@@ -11,7 +7,6 @@ import java.util.Set;
  * self-ordering sets (e.g. a TreeSet).
  */
 public class HashTree {
-    private static Map<ItemID, Node> hash = new HashMap<ItemID, Node>();
     
     private Node root;
     private int count;
@@ -35,8 +30,8 @@ public class HashTree {
         return count == 0;
     }
 
-    public void add(Set<Item> itemSet) {
-        throw new UnsupportedOperationException("HashTree.add(Set<Item>) not yet implemeneted");
+    public void add(ItemSet itemSet) {
+        throw new UnsupportedOperationException("HashTree.add(ItemSet) not yet implemeneted");
     }
     
     public void pruneNoMinSupport() {

@@ -1,7 +1,6 @@
 package domain.apriori.structures;
 
 import java.util.HashSet;
-import java.util.Set;
 
 /*
  * A node with a bucket (a set of itemsets). If the bucket's size limit has not
@@ -17,9 +16,9 @@ import java.util.Set;
 public class BucketNode extends Node {
     
     /** Initializes this as a bucket containing the given itemset **/
-    public BucketNode(Set<Item> itemSet) {
+    public BucketNode(ItemSet itemSet) {
         super();
-        this.bucket = new HashSet<Set<Item>>();
+        this.bucket = new HashSet<ItemSet>();
         this.bucket.add(itemSet);
     }
 
