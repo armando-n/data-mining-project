@@ -15,16 +15,15 @@ import java.util.HashSet;
  */
 public class BucketNode extends Node {
     
-    /** Initializes this as a bucket containing the given itemset **/
-    public BucketNode(ItemSet itemSet) {
-        super();
+    /** Initializes an empty bucket **/
+    public BucketNode(int itemsPerItemSet, int level) {
+        super(itemsPerItemSet, level);
         this.bucket = new HashSet<ItemSet>();
-        this.bucket.add(itemSet);
     }
 
     @Override
-    public void add(Item item) {
-        throw new UnsupportedOperationException("BucketNode.add(Item) not yet implemeneted");
+    public void add(ItemSet itemSet) {
+        throw new UnsupportedOperationException("BucketNode.add(ItemSet) not yet implemeneted");
     }
 
 }

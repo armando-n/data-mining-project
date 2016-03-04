@@ -9,29 +9,24 @@ package domain.apriori.structures;
 public class HashTree {
     
     private Node root;
-    private int count;
+    private int numOfItemsPerItemSet;
     private int absoluteMinSupport;
-    private int level;
     
-    /** Initializes this with the given min support and level. **/
-    public HashTree(int absoluteMinSupport, int level) {
-        this.root = null;
-        this.count = 0;
+    /** Initializes this with the given min support and items per itemset. **/
+    public HashTree(int itemsPerItemSet, int absoluteMinSupport) {
+        this.root = new HashNode(itemsPerItemSet, 0);
+        this.numOfItemsPerItemSet = itemsPerItemSet;
         this.absoluteMinSupport = absoluteMinSupport;
-        this.level = level;
-    }
-    
-    /** Initializes this with its level set to 1 and with the given min support. **/
-    public HashTree(int absoluteMinSupport) {
-        this(absoluteMinSupport, 1);
     }
     
     public boolean isEmpty() {
-        return count == 0;
+        return root == null;
     }
 
+    /** Adds the itemset to this HashTree. If the itemset was already present
+     * in the tree, its frequency (occurrence count) will be updated. **/
     public void add(ItemSet itemSet) {
-        throw new UnsupportedOperationException("HashTree.add(ItemSet) not yet implemeneted");
+        root.add(itemSet);
     }
     
     public void pruneNoMinSupport() {
