@@ -17,41 +17,41 @@ public class HashNode extends Node {
 
     @Override
     public void add(ItemSet itemSet) {
-        SortedSet<Item> chosenItems = new TreeSet<Item>(); // the number of items in the set chosen to be a part of the final itemsets
+        SortedSet<Item> chosenItems = new TreeSet<Item>(); // the already chosen set of items that will be part of the final itemsets
         Item[] itemSetArray = (Item[])itemSet.toArray(); // using an indexed array makes this method much simpler
-        int leftToPick = this.itemSetTargetSize - this.level; // number of items left to pick for the final itemsets
+        int leftToPick = this.itemSetTargetSize - this.level; // the number of items left to pick for the final itemsets
+        int maxPickableIndex = itemSetArray.length - leftToPick;
         
-        for (int i = 0; i < itemSetArray.length; i++) {
+        for (int i = 0; i <= maxPickableIndex; i++) {
             
             // collect the already-chosen items into a set
-            if (i < level)
+            if (i < this.level)
                 chosenItems.add(itemSetArray[i]);
             
-            // the current item is an unchosen item. take it, all (unchosen) items after it, and combine with chosen items, then pass it down
-            else if (i <= itemSetArray.length - leftToPick) {
+            // the current item is an unchosen item
+            else {
                 
                 // hash the current unchosen item to determine which child node to pass the new itemset on to
                 int hashResult = hash(itemSetArray[i]);
                 
-                // create new itemset by choosing the current item and keeping all unchosen items after the current item
+                // create new itemset from a combination of chosen items, the current item, and all items after it
                 ItemSet newCombination = new ItemSet(chosenItems);
                 newCombination.add(itemSetArray[i]);
                 for (int j = i; j < itemSetArray.length; j++)
                     newCombination.add(itemSetArray[j]);
                 
                 // now pass it down
-                if (children[hashResult] == null)
-                    children[hashResult] = new BucketNode(this.itemSetTargetSize, this.level+1);
-                children[hashResult].add(newCombination);
-                
+                if (this.children[hashResult] == null)
+                    this.children[hashResult] = new BucketNode(this.itemSetTargetSize, this.level+1);
+                this.children[hashResult].add(newCombination);
             }
         }
     }
     
-    /** The hash function used on the next unchosen item in an itemset in order
-     * to determine which child node to pass the itemset to. **/
-    private int hash(Item item) {
-        return item.getIdForHash() % this.children.length;
-    }
+//    /** The hash function used on the next unchosen item in an itemset in order
+//     * to determine which child node to pass the itemset to. **/
+//    private int hash(Item item) {
+//        return item.getIdForHash() % this.children.length;
+//    }
 
 }
