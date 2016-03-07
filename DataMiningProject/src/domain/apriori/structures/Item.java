@@ -45,5 +45,8 @@ public abstract class Item implements Comparable<Item> {
     
     @Override
     public abstract String toString();
+    
+    @Override
+    public abstract boolean equals(Object o);
 
 }

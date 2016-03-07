@@ -14,7 +14,7 @@ public class HashTree {
     
     /** Initializes this with the given min support and items per itemset. **/
     public HashTree(int itemsPerItemSet, int absoluteMinSupport) {
-        this.root = new HashNode(itemsPerItemSet, 0);
+        this.root = new Node(itemsPerItemSet, 0, false);
         this.numOfItemsPerItemSet = itemsPerItemSet;
         this.absoluteMinSupport = absoluteMinSupport;
     }

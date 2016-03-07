@@ -24,5 +24,15 @@ public class StringItem extends Item {
     public String toString() {
         return (String)id;
     }
+    
+    @Override
+    public boolean equals(Object item) {
+        if (!(item instanceof StringItem))
+            throw new IllegalArgumentException("StringItem.equals: invalid item object");
+        StringItem strItem = (StringItem)item;
+        String itemID = (String)strItem.getID();
+        
+        return ((String)this.id).equals(itemID);
+    }
 
 }

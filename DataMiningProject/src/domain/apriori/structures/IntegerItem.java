@@ -23,6 +23,16 @@ public class IntegerItem extends Item {
     @Override
     public String toString() {
         return ((Integer)id).toString();
-    }    
+    }
+    
+    @Override
+    public boolean equals(Object item) {
+        if (!(item instanceof IntegerItem))
+            throw new IllegalArgumentException("IntegerItem.equals: invalid item object");
+        IntegerItem intItem = (IntegerItem)item;
+        Integer itemID = (Integer)intItem.getID();
+        
+        return ((Integer)this.id).equals(itemID);
+    }
 
 }
