@@ -7,6 +7,7 @@ package domain.apriori.structures;
  * self-ordering sets (e.g. a TreeSet).
  */
 public class HashTree {
+    private static int numOfChildren = 3; // the number of children per node
     
     private Node root;
     private int numOfItemsPerItemSet;
@@ -26,7 +27,7 @@ public class HashTree {
     /** Adds the itemset to this HashTree. If the itemset was already present
      * in the tree, its frequency (occurrence count) will be updated. **/
     public void add(ItemSet itemSet) {
-        root.add(itemSet);
+        this.root.add(itemSet);
     }
     
     public void pruneNoMinSupport() {

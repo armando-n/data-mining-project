@@ -1,9 +1,12 @@
 package domain.apriori.structures;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import org.apache.commons.math3.util.CombinatoricsUtils;
 
 /*
  * This class represents a node in the hash tree. Its bucket (value)
@@ -27,8 +30,8 @@ public class Node {
     private static int maxBucketSize = 3; // the number of itemsets allowed per bucket (unless there are no more items to hash in the itemset being added)
     
     private int itemSetTargetSize;
-    private int level;
-    private Set<ItemSet> bucket; // either a set of itemsets, or null
+    private int level; // the level of this node in the hash tree (root is at level 0)
+    private Map<ItemSet, ItemSet> bucket; // contains itemsets (bucket node), or is null (hash node)
     private Node[] children;
 
     /** Initializes this node's children to null.
@@ -39,107 +42,140 @@ public class Node {
         this.children = new Node[numOfChildren];
         this.itemSetTargetSize = itemsPerItemSet;
         this.level = level;
-        this.bucket = isBucketNode ? new HashSet<ItemSet>() : null;
+        this.bucket = isBucketNode ? new HashMap<ItemSet, ItemSet>() : null;
     }
     
     /** @return This node's bucket (set of itemsets), or null if this node has no bucket. **/
-    public Set<ItemSet> getBucket() {
-        return bucket;
+    public Collection<ItemSet> getBucket() {
+        return bucket.values();
     }
     
-    /** @return True if this node has a bucket, or false if this node's value is null **/
+    /** @return True if this node has a bucket, indicating this node is a bucket node. False if this node's value
+     * is null, indicating this node is a hash node. **/
     public boolean hasBucket() {
         return bucket != null;
     }
     
-    /** Behavior is dependent on the type of node. **/
+    /** Add or pass on all itemsets of length this.itemSetTargetSize contained in the given itemSet **/
     public void add(ItemSet itemSet) {
+        add(new ItemSet(), itemSet);
+    }
+    
+    /** Add or pass on all itemsets of length this.itemSetTargetSize that can be made from the chosen and remaining items **/
+    public void add(ItemSet chosenItems, ItemSet remainingItems) {
         if (hasBucket())
-            bucketNode_add(itemSet);
+            bucketNode_add(chosenItems, remainingItems);
         else
-            hashNode_add(itemSet);
-    }
-    
-    private void hashNode_add(ItemSet itemSet) {
-        passToChildren( generateNewItemSets(itemSet) );
+            chooseNextAndPass(chosenItems, remainingItems);
     }
 
-    // TODO what if the itemset already exists in the bucket? its frequency must be increased
-    private void bucketNode_add(ItemSet itemSet) {
+    /** Either adds all itemsets of length this.itemSetTargetSize that can be made from the chosen and remaining items,
+     * or converts this node into a hash node and passes everything on if the max bucket size would have been breached. **/
+    private void bucketNode_add(ItemSet chosenItems, ItemSet remainingItems) {
+        // there are no more items to choose; simply put it in this bucket
+        if (chosenItems.size() == this.itemSetTargetSize) {
+            putInBucket(chosenItems);
+            return;
+        }
         
-        // the passed itemset is the final combination; simply add it to this bucket
-        if (this.level == this.itemSetTargetSize)
-            this.bucket.add(itemSet);
+        long numOfItemSetsLeft = CombinatoricsUtils.binomialCoefficient(remainingItems.size(), this.itemSetTargetSize - chosenItems.size());
         
-        // we are not at the final level
+        // the new itemsets will fit into this node's bucket; generate them and put them in the bucket
+        if (this.bucket.size() + numOfItemSetsLeft <= Node.maxBucketSize)
+            putInBucket(generateFinalItemSets(chosenItems, remainingItems));
+            
+        // itemsets won't fit, and we can go another level deeper
         else {
-            
-            // generate new itemsets by choosing each possible next item
-            Set<ItemSet> newItemSets = generateNewItemSets(itemSet);
-            
-            // the new itemsets will fit into this node's bucket, so just add them
-            if (this.bucket.size() + newItemSets.size() <= Node.maxBucketSize)
-                this.bucket.addAll(newItemSets);   
-                
-            // itemsets won't fit, and we can go another level deeper, so create child bucket nodes and pass items to them
-            else {
-                newItemSets.addAll(this.bucket); // collect the existing itemsets in this bucket as well
-                passToChildren(newItemSets); // split up the itemsets into the next level
-                this.bucket = null; // make this node a hash node
-            }
+            chooseNextAndPass(chosenItems, remainingItems); // choose all possible next items, and pass it on to child nodes
+            passBucketItemSets(); // pass all itemsets already in bucket and make this a hash node 
         }
     }
     
-    private Set<ItemSet> generateNewItemSets(ItemSet itemSet) {
-        Set<ItemSet> newItemSets = new HashSet<ItemSet>();
-        SortedSet<Item> chosenItems = new TreeSet<Item>(); // the already chosen set of items that will be part of the final itemsets
-        Item[] itemArray = (Item[])itemSet.toArray(); // using an indexed array makes this method much simpler
-        int leftToPick = this.itemSetTargetSize - this.level; // the number of items left to pick for the final itemsets
-        int maxPickableIndex = itemArray.length - leftToPick;
+    /** Generate new itemsets by choosing each possible next item, and pass them to the appropriate children **/
+    private void chooseNextAndPass(ItemSet chosenItems, ItemSet remainingItems) {
+        int numItemsLeftToPick = this.itemSetTargetSize - chosenItems.size();
+        int maxPickableIndex = remainingItems.size() - numItemsLeftToPick;
+        Iterator<Item> remainingIter = remainingItems.iterator();
         
-        // create and collect new combinations of itemsets by choosing all possible next items
         for (int i = 0; i <= maxPickableIndex; i++) {
+            Item nextItemChoice = remainingIter.next();
             
-            // collect the already-chosen items into a set
-            if (i < this.level)
-                chosenItems.add(itemArray[i]);
+            ItemSet newRemaining = new ItemSet(remainingItems.tailSet(nextItemChoice, false));
+            ItemSet newChosen = new ItemSet(chosenItems);
+            newChosen.add(nextItemChoice);
             
-            // the current item is an unchosen item
-            else {
-                
-                // create new itemset from a combination of chosen items, the current item, and all items after it
-                ItemSet newCombination = new ItemSet(chosenItems);
-                newCombination.add(itemArray[i]);
-                for (int j = i; j < itemArray.length; j++)
-                    newCombination.add(itemArray[j]);
-                
-                // add it to the set of newCombination itemsets
-                newCombination.incFrequency();
-                newItemSets.add(newCombination);
-            }
-        }
-        
-        return newItemSets;
-    }
-
-    private void passToChildren(Set<ItemSet> itemSets) {
-        Item[] itemArray;
-        for (ItemSet currItemSet : itemSets) {
-            
-            // hash the current unchosen item to determine which child node to pass the new itemset on to
-            itemArray = (Item[])currItemSet.toArray();
-            int hashResult = hash(itemArray[level]);
+            // hash the current item to determine which child node to pass the new itemset on to
+            int hashResult = hash(nextItemChoice);
             
             // now pass it down
             if (this.children[hashResult] == null)
                 this.children[hashResult] = new Node(this.itemSetTargetSize, this.level+1, true);
-            this.children[hashResult].add(currItemSet);
+            this.children[hashResult].add(newChosen, newRemaining);
         }
+    }
+    
+    /** Take all itemsets in the bucket, hash on their appropriate items, and pass them down to child nodes.
+     * Also converts this node into a hash node. **/
+    private void passBucketItemSets() {
+        Item[] itemArray;
+        int hashResult;
+        for (ItemSet itemSet : this.bucket.values()) {
+            // hash on appropriate item
+            itemArray = (Item[])itemSet.toArray();
+            hashResult = hash(itemArray[this.level]);
+            
+            // pass itemset down
+            if (this.children[hashResult] == null)
+                this.children[hashResult] = new Node(this.itemSetTargetSize, this.level+1, true);
+            this.children[hashResult].add(itemSet, null);
+        }
+        
+        // since we are hashing and passing now, this is a hash node
+        this.bucket = null;
+    }
+    
+    /** Generate and return all itemsets of length this.itemSetTargetSize that can be made from the chosen and remaining items **/
+    private Set<ItemSet> generateFinalItemSets(ItemSet chosenItems, ItemSet remainingItems) {
+        Set<ItemSet> result = new HashSet<ItemSet>();
+        if (chosenItems.size() == this.itemSetTargetSize) {
+            result.add(chosenItems);
+            return result;
+        }
+        
+        int numItemsLeftToPick = this.itemSetTargetSize - chosenItems.size();
+        int maxPickableIndex = remainingItems.size() - numItemsLeftToPick;
+        Iterator<Item> remainingIter = remainingItems.iterator();
+        
+        // choose all possible next items recursively
+        for (int i = 0; i <= maxPickableIndex; i++) {
+            Item nextItemChoice = remainingIter.next();
+            
+            ItemSet newRemainingItems = new ItemSet(remainingItems.tailSet(nextItemChoice, false));
+            ItemSet newChosenItems = new ItemSet(chosenItems);
+            newChosenItems.add(nextItemChoice);
+            
+            result.addAll(generateFinalItemSets(newChosenItems, newRemainingItems));
+        }
+        
+        return result;
     }
     
     /** The hash function used on the next unchosen item in an itemset in order
      * to determine which child node to pass the itemset to. **/
     private int hash(Item item) {
         return item.getIdForHash() % this.children.length;
+    }
+    
+    /** Adds the itemset to the bucket, or increases its frequency count if it already exists **/
+    private void putInBucket(ItemSet itemSet) {
+        if (this.bucket.containsKey(itemSet))
+            this.bucket.get(itemSet).incFrequency();
+        else
+            this.bucket.put(itemSet, itemSet);
+    }
+    /** Adds all itemsets to the bucket, or increases their frequency counts if they already exists **/
+    private void putInBucket(Set<ItemSet> itemSets) {
+        for (ItemSet itemSet : itemSets)
+            putInBucket(itemSet);
     }
 }
