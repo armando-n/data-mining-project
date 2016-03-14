@@ -108,6 +108,81 @@ public class Node {
         countCandidates(new ItemSet(), transaction);
     }
     
+    /** Returns true if all subsets of length this.itemSetTargetSize in the transaction
+     * are present in the subtree that this node is root of.
+     * @return True if all k-itemsets in the transaction exist in this subtree. False otherwise. **/
+    public boolean areAllSubsetsPresent(ItemSet transaction) {
+        return areAllSubsetsPresent(new ItemSet(), transaction);
+    }
+    
+    /** Using the hash tree generated previously for frequent (k-1)-itemsets, prune (remove) any k-itemsets
+     * existing in this hash tree that contain subsets that are not present in the (k-1)-itemset tree, and
+     * are therefore not frequent.
+     * @return True if this node should be removed entirely as a result of the prune. False if it should remain. */
+    public boolean prune(HashTree previousTree) {
+        boolean pruneEntireNode = true;
+        
+        if (hasBucket()) { // bucket node
+            for (ItemSet candidate : this.bucket.values())
+                if (!previousTree.areAllSubsetsFrequent(candidate)) // check frequent (k-1)-itemset tree for subsets contained in the current candidate
+                    this.bucket.remove(candidate); // the current candidate has an infrequent subset; it is not frequent
+            
+            return this.bucket.isEmpty();
+        }
+        
+        else { // hash node
+            for (int i = 0; i < this.children.length; i++) {
+                if (this.children[i] != null) {
+                    if (this.children[i].prune(previousTree))
+                        this.children[i] = null; // remove child node
+                    else
+                        pruneEntireNode = false; // the child isn't being removed, so neither should this node (child's parent)
+                }
+            }
+        }
+        
+        return pruneEntireNode;
+    }
+    
+    /** Returns true if all subsets of length this.itemSetTargetSize generated from the chosen and
+     * remaining itemsets are present in the subtree that this node is root of.
+     * @return True if all k-itemsets generated from the chosen and remaining items are present in this subtree. False otherwise. **/
+    private boolean areAllSubsetsPresent(ItemSet chosenItems, ItemSet remainingItems) {
+        // there are no more items to choose; check bucket
+        if (chosenItems.size() == this.itemSetTargetSize)
+            return this.bucket.containsKey(chosenItems);
+        
+        // there are more items to choose, and this is a bucket node
+        if (hasBucket()) {
+            for (ItemSet itemSet : generateFinalItemSets(chosenItems, remainingItems))
+                if (!this.bucket.containsKey(itemSet))
+                    return false;
+            return true;
+        }
+        
+        // there are more items to choose, and this is a hash node
+        else
+            return areAllSubsetsPresentInChildren(generateNextCombinations(chosenItems, remainingItems));
+    }
+    
+    /** Takes the next combinations and passes them to the appropriate children to be determine if all
+     * itemsets of length this.itemSetTargetSize generated from each combination are present in the tree.
+     * @return True if all k-itemsets in all combinations are present in the child nodes. False otherwise. **/ 
+    private boolean areAllSubsetsPresentInChildren(List<ItemSet[]> nextCombinations) {
+        for (ItemSet[] nextComb : nextCombinations) {
+            
+            // hash the current item to determine which child node to pass the new combination on to
+            int hashResult = hash(nextComb[INDEX_CHOSEN].last());
+            
+            // now pass it down
+            if (this.children[hashResult] != null)
+                if (!this.children[hashResult].areAllSubsetsPresent(nextComb[INDEX_CHOSEN], nextComb[INDEX_REMAINING]))
+                    return false;
+        }
+        
+        return true;
+    }
+
     /** Update the frequency counts of candidates that can be obtained from the chosen and remaining items **/
     private void countCandidates(ItemSet chosenItems, ItemSet remainingItems) {
         
