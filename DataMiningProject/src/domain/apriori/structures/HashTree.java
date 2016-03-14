@@ -11,13 +11,11 @@ public class HashTree {
     
     private Node root;
     private int numOfItemsPerItemSet;
-    private int absoluteMinSupport;
     
     /** Initializes this with the given min support and items per itemset. **/
     public HashTree(int itemsPerItemSet, int absoluteMinSupport) {
-        this.root = new Node(itemsPerItemSet, 0, false);
         this.numOfItemsPerItemSet = itemsPerItemSet;
-        this.absoluteMinSupport = absoluteMinSupport;
+        this.root = new Node(itemsPerItemSet, 0, absoluteMinSupport);
     }
     
     public boolean isEmpty() {
@@ -27,11 +25,20 @@ public class HashTree {
     /** Adds the itemset to this HashTree. If the itemset was already present
      * in the tree, its frequency (occurrence count) will be updated. **/
     public void add(ItemSet itemSet) {
-        this.root.add(itemSet);
+        if (itemSet.size() >= this.numOfItemsPerItemSet)
+            this.root.add(itemSet);
     }
     
-    public void pruneNoMinSupport() {
-        throw new UnsupportedOperationException("HashTree.pruneNoMinSupport() not yet implemeneted");
+    /** Removes all itemsets that have a frequency count lower than minimum support
+     * @return True if removal results in an empty hash tree. False otherwise. **/
+    public boolean removeNoMinSupport() {
+        return this.root.removeNoMinSupport();
+    }
+    
+    /** Finds all candidate itemsets in transaction and increases their frequency counts. **/
+    public void countCandidates(ItemSet transaction) {
+        if (transaction.size() >= this.numOfItemsPerItemSet)
+            this.root.countCandidates(transaction);
     }
     
 }

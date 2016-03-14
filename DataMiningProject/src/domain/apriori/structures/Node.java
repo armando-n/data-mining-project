@@ -1,9 +1,11 @@
 package domain.apriori.structures;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.math3.util.CombinatoricsUtils;
@@ -28,21 +30,25 @@ import org.apache.commons.math3.util.CombinatoricsUtils;
 public class Node {
     private static int numOfChildren = 3; // the number of children per node
     private static int maxBucketSize = 3; // the number of itemsets allowed per bucket (unless there are no more items to hash in the itemset being added)
+    private static final int INDEX_CHOSEN = 0;
+    private static final int INDEX_REMAINING = 1;
     
     private int itemSetTargetSize;
     private int level; // the level of this node in the hash tree (root is at level 0)
     private Map<ItemSet, ItemSet> bucket; // contains itemsets (bucket node), or is null (hash node)
     private Node[] children;
+    private int absoluteMinSupport;
 
     /** Initializes this node's children to null.
      * @param itemsPerItemSet This is k for a k-item set HashTree (which stores only k-item sets).
      * @param level This Node's level must be specified. (The root is at level 0)
-     * @param isBucketNode Indicates whether to set this node up as a bucket node (true) or a hash node (false). **/
-    public Node(int itemsPerItemSet, int level, boolean isBucketNode) {
+     * @param absoluteMinimumSupport The minimum frequency count an itemset needs to be considered frequent. Used during pruning. **/
+    public Node(int itemsPerItemSet, int level, int absoluteMinimumSupport) {
         this.children = new Node[numOfChildren];
         this.itemSetTargetSize = itemsPerItemSet;
         this.level = level;
-        this.bucket = isBucketNode ? new HashMap<ItemSet, ItemSet>() : null;
+        this.absoluteMinSupport = absoluteMinimumSupport;
+        this.bucket = (level == 0) ? null : new HashMap<ItemSet, ItemSet>();
     }
     
     /** @return This node's bucket (set of itemsets), or null if this node has no bucket. **/
@@ -66,7 +72,62 @@ public class Node {
         if (hasBucket())
             bucketNode_add(chosenItems, remainingItems);
         else
-            chooseNextAndPass(chosenItems, remainingItems);
+            addToChildren(generateNextCombinations(chosenItems, remainingItems));
+    }
+    
+    /** Remove itemsets that do not meet minimum support, as well as empty/useless child nodes.
+     * @return True if this node should be removed entirely as a result of the removal. False if it should remain. */
+    public boolean removeNoMinSupport() {
+        boolean removeEntireNode = true;
+        
+        if (hasBucket()) { // bucket node
+            // remove itemsets in the bucket that do not meet minimum support
+            for (ItemSet candidate : this.bucket.values())
+                if (candidate.getFrequency() < this.absoluteMinSupport)
+                    this.bucket.remove(candidate);
+            
+            removeEntireNode = this.bucket.isEmpty(); // if the bucket is empty now, this entire node can be removed
+            
+        } else { // hash node
+            // tell children to remove itemsets, and remove child nodes entirely when appropriate
+            for (int i = 0; i < this.children.length; i++) {
+                if (this.children[i] != null) {
+                    if (this.children[i].removeNoMinSupport())
+                        this.children[i] = null; // remove child node
+                    else
+                        removeEntireNode = false; // the child isn't being removed, so neither should this node (child's parent)
+                }
+            }
+        }
+        
+        return removeEntireNode;
+    }
+    
+    /** Update the frequency counts of candidates contained in the given transaction **/
+    public void countCandidates(ItemSet transaction) {
+        countCandidates(new ItemSet(), transaction);
+    }
+    
+    /** Update the frequency counts of candidates that can be obtained from the chosen and remaining items **/
+    private void countCandidates(ItemSet chosenItems, ItemSet remainingItems) {
+        
+        // there are no more items to choose; check bucket
+        if (chosenItems.size() == this.itemSetTargetSize) {
+            if (this.bucket.containsKey(chosenItems))
+                this.bucket.get(chosenItems).incFrequency();
+            return;
+        }
+        
+        // there are more items to choose, and this is a bucket node
+        if (hasBucket()) {
+            for (ItemSet itemSet : generateFinalItemSets(chosenItems, remainingItems))
+                if (this.bucket.containsKey(itemSet))
+                    this.bucket.get(itemSet).incFrequency();
+        }
+        
+        // there are more items to choose, and this is a hash node
+        else
+            countInChildren(generateNextCombinations(chosenItems, remainingItems));
     }
 
     /** Either adds all itemsets of length this.itemSetTargetSize that can be made from the chosen and remaining items,
@@ -86,37 +147,61 @@ public class Node {
             
         // itemsets won't fit, and we can go another level deeper
         else {
-            chooseNextAndPass(chosenItems, remainingItems); // choose all possible next items, and pass it on to child nodes
-            passBucketItemSets(); // pass all itemsets already in bucket and make this a hash node 
+            addToChildren(generateNextCombinations(chosenItems, remainingItems)); // choose all possible next items, pass resulting new combinations on to child nodes
+            convertToHashNode(); // make this a hash node, passing all itemsets already in bucket to children 
         }
     }
     
-    /** Generate new itemsets by choosing each possible next item, and pass them to the appropriate children **/
-    private void chooseNextAndPass(ItemSet chosenItems, ItemSet remainingItems) {
+    /** Generate and return new combinations by choosing each possible next item **/
+    private List<ItemSet[]> generateNextCombinations(ItemSet chosenItems, ItemSet remainingItems) {
         int numItemsLeftToPick = this.itemSetTargetSize - chosenItems.size();
         int maxPickableIndex = remainingItems.size() - numItemsLeftToPick;
         Iterator<Item> remainingIter = remainingItems.iterator();
+        List<ItemSet[]> nextCombinations = new ArrayList<ItemSet[]>();
         
         for (int i = 0; i <= maxPickableIndex; i++) {
             Item nextItemChoice = remainingIter.next();
+            ItemSet[] chosenAndRemaining = new ItemSet[2];
             
-            ItemSet newRemaining = new ItemSet(remainingItems.tailSet(nextItemChoice, false));
-            ItemSet newChosen = new ItemSet(chosenItems);
-            newChosen.add(nextItemChoice);
+            chosenAndRemaining[INDEX_REMAINING] = new ItemSet(remainingItems.tailSet(nextItemChoice, false)); 
+            chosenAndRemaining[INDEX_CHOSEN] = new ItemSet(chosenItems);
+            chosenAndRemaining[INDEX_CHOSEN].add(nextItemChoice);
+            nextCombinations.add(chosenAndRemaining);
+        }
+        
+        return nextCombinations;
+    }
+    
+    /** Takes the next combinations and passes them to the appropriate children to be added to the tree **/
+    private void addToChildren(List<ItemSet[]> nextCombinations) {
+        for (ItemSet[] nextComb : nextCombinations) {
             
-            // hash the current item to determine which child node to pass the new itemset on to
-            int hashResult = hash(nextItemChoice);
+            // hash the item just chosen to determine which child node to pass the new combination on to
+            int hashResult = hash(nextComb[INDEX_CHOSEN].last());
             
             // now pass it down
             if (this.children[hashResult] == null)
-                this.children[hashResult] = new Node(this.itemSetTargetSize, this.level+1, true);
-            this.children[hashResult].add(newChosen, newRemaining);
+                this.children[hashResult] = new Node(this.itemSetTargetSize, this.level+1, this.absoluteMinSupport);
+            this.children[hashResult].add(nextComb[INDEX_CHOSEN], nextComb[INDEX_REMAINING]);
         }
     }
     
-    /** Take all itemsets in the bucket, hash on their appropriate items, and pass them down to child nodes.
-     * Also converts this node into a hash node. **/
-    private void passBucketItemSets() {
+    /** Takes the next combinations and passes them to the appropriate children to be counted in the tree **/
+    private void countInChildren(List<ItemSet[]> nextCombinations) {
+        for (ItemSet[] nextComb : nextCombinations) {
+            
+            // hash the current item to determine which child node to pass the new combination on to
+            int hashResult = hash(nextComb[INDEX_CHOSEN].last());
+            
+            // now pass it down
+            if (this.children[hashResult] != null)
+                this.children[hashResult].countCandidates(nextComb[INDEX_CHOSEN], nextComb[INDEX_REMAINING]);
+        }
+    }
+    
+    /** Converts this node into a hash node. Any itemsets in the bucket are
+     * hashed and passed to the appropriate child nodes. **/
+    private void convertToHashNode() {
         Item[] itemArray;
         int hashResult;
         for (ItemSet itemSet : this.bucket.values()) {
@@ -126,7 +211,7 @@ public class Node {
             
             // pass itemset down
             if (this.children[hashResult] == null)
-                this.children[hashResult] = new Node(this.itemSetTargetSize, this.level+1, true);
+                this.children[hashResult] = new Node(this.itemSetTargetSize, this.level+1, this.absoluteMinSupport);
             this.children[hashResult].add(itemSet, null);
         }
         
