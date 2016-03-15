@@ -62,6 +62,16 @@ public class Node {
         return bucket != null;
     }
     
+    public boolean hasChildren() {
+        boolean result = false;
+        
+        for (Node child : this.children)
+            if (child != null)
+                result = true;
+        
+        return result;
+    }
+    
     /** Add or pass on all itemsets of length this.itemSetTargetSize contained in the given itemSet **/
     public void add(ItemSet itemSet) {
         add(new ItemSet(), itemSet);

@@ -3,6 +3,7 @@ package domain.apriori.structures;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /*
  * This class represents a hash tree in which the interior nodes are hash
@@ -29,7 +30,7 @@ public class HashTree {
     }
     
     public boolean isEmpty() {
-        return root == null;
+        return this.root.hasChildren();
     }
 
     /** Adds the itemset to this HashTree. If the itemset was already present
@@ -40,10 +41,20 @@ public class HashTree {
             this.root.add(itemSet);
     }
     
+    public void addAll(Set<ItemSet> itemSets) {
+        for (ItemSet itemSet : itemSets)
+            add(itemSet);
+    }
+    
     /** Finds all candidate itemsets in transaction and increases their frequency counts in this hash tree. **/
     public void countCandidates(ItemSet transaction) {
         if (transaction.size() >= this.numOfItemsPerItemSet)
             this.root.countCandidates(transaction);
+    }
+    
+    public void countCandidates(Set<ItemSet> transactions) {
+        for (ItemSet transaction : transactions)
+            countCandidates(transaction);
     }
     
     /** Removes all itemsets that have a frequency count lower than minimum support
