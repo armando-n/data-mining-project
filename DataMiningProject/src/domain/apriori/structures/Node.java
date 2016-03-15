@@ -144,6 +144,35 @@ public class Node {
         return pruneEntireNode;
     }
     
+    /** Adds all itemsets in this node's subtree to the given result itemset list. **/
+    public void toArray(List<ItemSet> result) {
+        
+        if (hasBucket()) { // bucket node
+            for (ItemSet itemSet : this.bucket.values())
+                result.add(itemSet);
+        }
+        
+        else { // hash node
+            for (int i = 0; i < this.children.length; i++)
+                if (this.children[i] != null)
+                    this.children[i].toArray(result);
+        }
+    }
+    
+    /** Increments by 1 the frequencies of all itemsets contained in the subtree that this node is root of **/
+    public void increaseFrequencies() {
+        if (hasBucket()) { // bucket node
+            for (ItemSet itemSet : this.bucket.values())
+                itemSet.incFrequency();
+        }
+        
+        else { // hash node
+            for (int i = 0; i < this.children.length; i++)
+                if (this.children[i] != null)
+                    this.children[i].increaseFrequencies();
+        }
+    }
+    
     /** Returns true if all subsets of length this.itemSetTargetSize generated from the chosen and
      * remaining itemsets are present in the subtree that this node is root of.
      * @return True if all k-itemsets generated from the chosen and remaining items are present in this subtree. False otherwise. **/
@@ -222,8 +251,8 @@ public class Node {
             
         // itemsets won't fit, and we can go another level deeper
         else {
-            addToChildren(generateNextCombinations(chosenItems, remainingItems)); // choose all possible next items, pass resulting new combinations on to child nodes
-            convertToHashNode(); // make this a hash node, passing all itemsets already in bucket to children 
+            convertToHashNode(); // make this a hash node, passing all itemsets already in bucket to children
+            addToChildren(generateNextCombinations(chosenItems, remainingItems)); // choose all possible next items, pass resulting new combinations on to child nodes 
         }
     }
     
