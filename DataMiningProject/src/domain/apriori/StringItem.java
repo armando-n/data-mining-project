@@ -1,4 +1,4 @@
-package domain.apriori.structures;
+package domain.apriori;
 
 /*
  * Represents an item with a String ID.
@@ -33,6 +33,11 @@ public class StringItem extends Item {
         String itemID = (String)strItem.getID();
         
         return ((String)this.id).equals(itemID);
+    }
+    
+    @Override
+    public int hashCode() {
+        return ((String)this.id).hashCode();
     }
 
 }

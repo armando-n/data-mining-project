@@ -1,4 +1,4 @@
-package domain.apriori.structures;
+package domain.apriori;
 
 /*
  * Represents an item with an Integer ID.
@@ -33,6 +33,11 @@ public class IntegerItem extends Item {
         Integer itemID = (Integer)intItem.getID();
         
         return ((Integer)this.id).equals(itemID);
+    }
+    
+    @Override
+    public int hashCode() {
+        return ((Integer)this.id).hashCode();
     }
 
 }

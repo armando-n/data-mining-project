@@ -1,4 +1,4 @@
-package domain.apriori.structures;
+package domain.apriori;
 
 /*
  * This abstract class represents an item with an ID.
@@ -8,7 +8,7 @@ public abstract class Item implements Comparable<Item> {
     public static int ID_TYPE_INTEGER = 0;
     public static int ID_TYPE_STRING = 1;
     
-    private int idType;
+    protected int idType;
     protected Object id;
     
     public Item(Object id, int idType) {
@@ -48,5 +48,8 @@ public abstract class Item implements Comparable<Item> {
     
     @Override
     public abstract boolean equals(Object o);
+    
+    @Override
+    public abstract int hashCode();
 
 }

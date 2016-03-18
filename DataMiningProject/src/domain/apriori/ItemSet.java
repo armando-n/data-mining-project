@@ -1,4 +1,4 @@
-package domain.apriori.structures;
+package domain.apriori;
 
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -21,6 +21,18 @@ public class ItemSet extends TreeSet<Item> {
     
     public int getFrequency() {
         return frequency;
+    }
+    
+    @Override
+    public String toString() {
+        String result = "{";
+        
+        for (Item item : this)
+            result += " " + item.toString();
+        
+        result += " }:" + this.frequency;
+        
+        return result;
     }
     
 }
