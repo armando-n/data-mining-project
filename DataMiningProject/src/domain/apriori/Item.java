@@ -1,17 +1,17 @@
-package domain.apriori.structures;
+package domain.apriori;
 
 /*
- * This abstract class represents a generic item ID. 
+ * This abstract class represents an item with an ID.
+ * Used to form ItemSets.
  */
-public abstract class ItemID implements Comparable<ItemID> {
-    
+public abstract class Item implements Comparable<Item> {
     public static int ID_TYPE_INTEGER = 0;
     public static int ID_TYPE_STRING = 1;
     
-    private int idType;
+    protected int idType;
     protected Object id;
-
-    public ItemID(Object id, int idType) {
+    
+    public Item(Object id, int idType) {
         if (id == null)
             throw new IllegalArgumentException("Item ID cannot be null");
         
@@ -37,15 +37,19 @@ public abstract class ItemID implements Comparable<ItemID> {
     public int getIdType() {
         return idType;
     }
-
-    @Override
-    public int compareTo(ItemID o) {
-        throw new UnsupportedOperationException("ItemID.compareTo should be overwritten in child classes");
-    }
-
-    @Override
-    public String toString() {
-        throw new UnsupportedOperationException("ItemID.toString should be overwritten in child classes");
-    }
     
+    public abstract Integer getIdForHash();
+    
+    @Override
+    public abstract int compareTo(Item o);
+    
+    @Override
+    public abstract String toString();
+    
+    @Override
+    public abstract boolean equals(Object o);
+    
+    @Override
+    public abstract int hashCode();
+
 }

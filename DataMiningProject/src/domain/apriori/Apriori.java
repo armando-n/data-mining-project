@@ -1,26 +1,64 @@
 package domain.apriori;
 
-public class Apriori {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
-    public Apriori() {
-        // scan over entire database, counting occurrences of 1-itemsets. this is C_1
+public class Apriori {
+    
+    private List<HashTree> hashTrees;
+
+    /**
+     * Runs the Apriori algorithm on the given set of transactions.
+     * @param transactions The transactions to run the algorithm against.
+     * @param absoluteMinSupport The minimum number of occurrences an itemset needs to be considered frequent.
+     * @param childrenPerNode Each node in the generated hash trees will have this many child nodes.
+     * @param maxBucketSize The maximum number of itemsets a bucket node in a hash tree can have before it
+     *        is converted to a hash node, assuming the last level has not been reached.
+     */
+    public Apriori(Set<ItemSet> transactions, int absoluteMinSupport, int maxBucketSize, int childrenPerNode) {
+        HashTree kMinusOneItemSetTree;
+        HashTree kItemSetTree;
+        hashTrees = new ArrayList<HashTree>();
         
-        // remove 1-itemsets from consideration that do not meet min_sup
+        /* count the occurrences of all 1-itemsets in transactions, creating C_1,
+         * the set of candidate 1-itemsets. Then remove candidates that do not meet
+         * minimum support to create L_1, the set of frequent 1-itemsets. */
+        kItemSetTree = new HashTree(1, absoluteMinSupport, maxBucketSize, childrenPerNode);
+        kItemSetTree.addAll(transactions);
+        kItemSetTree.incFrequencies();
+        kItemSetTree.removeNoMinSupport();
         
-        // sort remaining 1-itemsets. this is L_1
+        for (int i = 1; !kItemSetTree.isEmpty(); i++) {
+            hashTrees.add(kItemSetTree);
+            System.out.println("L_" + i + ": \n" + kItemSetTree.toString());
+            kMinusOneItemSetTree = kItemSetTree;
+            
+            // join L_(k-1) with itself and prune resulting k-itemset hash tree to create C_k
+            kItemSetTree = kMinusOneItemSetTree.generateNextCandidateTree();
+            kItemSetTree.prune(kMinusOneItemSetTree);
+            
+            // create L_k by counting candidate k-itemsets and removing those that don't meet minimum support
+            kItemSetTree.countCandidates(transactions);
+            kItemSetTree.removeNoMinSupport();
+        }
+    }
+    
+    /** @return A list of frequent k-itemsets (i.e. frequent itemsets of length k) **/
+    public List<ItemSet> getFrequentKItemSets(int k) {
+        List<ItemSet> itemSets = new ArrayList<ItemSet>();
+        itemSets.addAll(this.hashTrees.get(k-1).toArray()); // k-itemset tree is at index k-1
+        return itemSets;
+    }
+    
+    /** @return A list of all frequent itemsets of any length **/
+    public List<ItemSet> getAllFrequentItemSets() {
+        List<ItemSet> itemSets = new ArrayList<ItemSet>();
         
-        // selectively join L_1 with itself
+        for (HashTree tree : hashTrees)
+            itemSets.addAll(tree.toArray());
         
-        /* prune the result of the join by looking to see
-         * if any of its subsets are not in L_1. This is C_2 */
-        
-        // scan over entire database, counting occurrences of the 2-itemsets in C_2
-        
-        // remove 2-itemsets from consideration that do not meet min_sup.  This is L_2
-        
-        // selectively join L_2 with itself
-        
-        // ... there is a pattern here ...
+        return itemSets;
     }
 
 }
