@@ -103,9 +103,6 @@ public class AprioriSession {
         Scanner lineScan = null;
         ItemSet itemSet;
         
-        if (delimiter == null || delimiter.isEmpty())
-            delimiter = DELIMITER_DEFAULT;
-        
         try {
         
             transactions = new HashSet<ItemSet>();
@@ -163,7 +160,7 @@ public class AprioriSession {
      * If delimiter is null, a default value is used.
      * @return A delimiter regular expression. **/
     private String whichDelimiter(String delimiter) {
-        if (delimiter == null)
+        if (delimiter == null || delimiter.isEmpty())
             return DELIMITER_DEFAULT;
         if (delimiter.equalsIgnoreCase("comma"))
             return ",\\s*";
