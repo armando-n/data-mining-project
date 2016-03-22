@@ -17,7 +17,14 @@ public class StringItem extends Item {
 
     @Override
     public int compareTo(Item stringItem) {
-        return ((String)id).compareTo((String)stringItem.getID());
+        int result = -1;
+        try {
+            result = ((String)id).compareTo((String)stringItem.getID());
+        } catch (ClassCastException e) {
+            System.err.println("Error: both integer and string inputs found. Make sure you specify a delimiter if the default delimiter does not apply to your input.");
+            System.exit(1);
+        }
+        return result;
     }
     
     @Override

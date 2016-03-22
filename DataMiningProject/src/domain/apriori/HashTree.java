@@ -140,7 +140,8 @@ public class HashTree {
     
     @Override
     public String toString() {
-        return printTree(this.root);
+        String result = "L_" + numOfItemsPerItemSet + ": frequent " + numOfItemsPerItemSet + "-itemsets ({ set }:count): " + String.format("%n");
+        return result + printTree(this.root);
     }
     
     /** Helper for toString() method **/
@@ -152,7 +153,7 @@ public class HashTree {
                 result += " " + itemSet.toString();
         } else
             result += " #";
-        result += "\n";
+        result += String.format("%n");
         
         Node[] children = node.getChildren();
         Node next = null;
