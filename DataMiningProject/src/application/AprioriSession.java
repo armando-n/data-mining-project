@@ -96,7 +96,8 @@ public class AprioriSession {
     }
     
     /** Attempts to read from this.inputFile and generate the list of this.transactions.
-     * If the input file cannot be found, an error message is printed and the method returns. **/
+     * If the input file cannot be found, an exception is thrown.
+     * @throws FileNotFoundException When this.inputFile cannot be found (invalid filename specified).**/
     private void readAprioriInput() throws FileNotFoundException {
         Scanner fileScan = null;
         Scanner lineScan = null;
@@ -136,7 +137,7 @@ public class AprioriSession {
     }
 
     /** Attempts to write the algorithm's output to this.outputFile.
-     * If the output file cannot be found, an error message is printed and the method returns. **/
+     * @throws IOException When the output file cannot be written to for some reason. **/
     private void writeOutput() throws IOException {
         BufferedWriter writer = null;
         try {
