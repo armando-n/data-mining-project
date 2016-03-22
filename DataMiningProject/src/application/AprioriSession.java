@@ -44,11 +44,12 @@ public class AprioriSession {
         return aprioriSession;
     }
     
-    /** Runs the apriori algorithm with the specified parameters. Default values can be used for everything except the input file.
+    /** Runs the apriori algorithm with the specified parameters.
+     * Default values can be used for everything except the input file and minimum support.
      * @param inFile The input file containing the data the apriori algorithm will be run on.
      * @param delimiter The delimiter used in the input file to separate attributes. If null, a default value is used.
      * @param outFile The file to write the algorithm's output to. If null, a default value is used.
-     * @param minSup The absolute minimum support required for an itemset to be considered frequent. If null, a default value is used.
+     * @param minSup The absolute minimum support required for an itemset to be considered frequent.
      * @param maxBucketSize The maximum bucket size of bucket nodes in the generated hash trees. If null, a default value is used.
      * @param children The number of children per node in the generated hash trees. If null, a default value is used.
      */
