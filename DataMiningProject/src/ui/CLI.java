@@ -29,6 +29,8 @@ public class CLI {
     private static final String OPT_CHILDREN_PER_NODE_S = "c";
     private static final String OPT_CHILDREN_PER_NODE_L = "children";
 
+    private static Options helpOptions;
+    private static Options mainOptions;
     private static CommandLine cmd;
     private static String algorithm = null;
     private static String inputFileName = null;
@@ -36,8 +38,25 @@ public class CLI {
     private static String delimiter = null;
     
     public static void main(String[] args) {
-        Options helpOptions = new Options();
-        Options mainOptions = new Options();
+        
+        createOptions();
+        parseCommonOptions(args);
+            
+        // parse remaining options according to which algorithm was specified
+        if (algorithm.equalsIgnoreCase("apriori") || algorithm.equalsIgnoreCase("a"))
+            apriori();
+        else if (algorithm.equalsIgnoreCase("id3") || algorithm.equalsIgnoreCase("i"))
+            id3();
+        else if(algorithm.equalsIgnoreCase("kmeans") || algorithm.equalsIgnoreCase("k"))
+            kMeans();
+        else
+            err_exit("Unrecognized algorithm specified: " + algorithm);
+        
+    }
+    
+    private static void createOptions() {
+        helpOptions = new Options();
+        mainOptions = new Options();
         
         // create help options
         helpOptions.addOption(Option.builder(OPT_HELP_S).longOpt(OPT_HELP_L).desc("print this message").build());
@@ -53,12 +72,14 @@ public class CLI {
         mainOptions.addOption(Option.builder(OPT_MIN_SUP_S).hasArg().argName("min-sup").longOpt(OPT_MIN_SUP_L).desc("apriori: absolute min support (required)").build());
         mainOptions.addOption(Option.builder(OPT_BUCKET_MAX_S).hasArg().argName("bucket-size").longOpt(OPT_BUCKET_MAX_L).desc("apriori: max bucket size for hash trees").build());
         mainOptions.addOption(Option.builder(OPT_CHILDREN_PER_NODE_S).hasArg().argName("#-per-node").longOpt(OPT_CHILDREN_PER_NODE_L).desc("apriori: # of children per node in hash trees").build());
+    }
+    
+    private static void parseCommonOptions(String[] args) {
         
         // parse help options
         try { cmd = new DefaultParser().parse(helpOptions, args, true); }
         catch (ParseException e) { help_exit(mainOptions, e.getMessage()); }
         
-        // help
         if (cmd.hasOption(OPT_HELP_S))
             help_exit(mainOptions, null);
         
@@ -66,32 +87,14 @@ public class CLI {
         try { cmd = new DefaultParser().parse(mainOptions, args); }
         catch (ParseException e) { help_exit(mainOptions, e.getMessage()); }
         
-        // algorithm (required)
         if (!cmd.hasOption(OPT_ALGORITHM_S) || (algorithm = cmd.getOptionValue(OPT_ALGORITHM_S)) == null)
             err_exit("An algorithm to run on the input must be specified");
-        
-        // input file (required)
         if (!cmd.hasOption(OPT_INPUT_FILE_S) || (inputFileName = cmd.getOptionValue(OPT_INPUT_FILE_S)) == null)
             err_exit("An input file must be specified");
-        
-        // output file
         if (cmd.hasOption(OPT_OUTPUT_FILE_S))
             outputFileName = cmd.getOptionValue(OPT_OUTPUT_FILE_S);
-        
-        // delimiter
         if (cmd.hasOption(OPT_DELIMITER_S))
             delimiter = cmd.getOptionValue(OPT_DELIMITER_S);
-            
-        // which algorithm was specified
-        if (algorithm.equalsIgnoreCase("apriori") || algorithm.equalsIgnoreCase("a"))
-            apriori();
-        else if (algorithm.equalsIgnoreCase("id3") || algorithm.equalsIgnoreCase("i"))
-            id3();
-        else if(algorithm.equalsIgnoreCase("kmeans") || algorithm.equalsIgnoreCase("k"))
-            kMeans();
-        else
-            err_exit("Unrecognized algorithm specified: " + algorithm);
-        
     }
     
     /** Handles the processing of apriori-specific command line arguments, and sends request to run the algorithm. **/
