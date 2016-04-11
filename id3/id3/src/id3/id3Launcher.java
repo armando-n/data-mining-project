@@ -22,13 +22,13 @@ public class id3Launcher {
 		kickoff("Yes", 4, ignore);
 		
 	}
-	public static void kickoff(String kVal, int kIn, int[] ignore) {
+	public static void kickoff(String positiveAttributeName, int positiveAttrCol, int[] ignore) {
 		File data = new File("training");
 		Scanner scanData = new Scanner(System.in);
 		int decisionIndex; 
 		
-		positiveKey = kVal;
-		positiveIndex = kIn;
+		positiveKey = positiveAttributeName;
+		positiveIndex = positiveAttrCol;
 		fields = 5;
 		
 		gain = new gainCalculator(positiveIndex, fields, positiveKey);
