@@ -3,6 +3,16 @@ package domain.id3;
 import java.util.HashMap;
 import java.util.Map;
 
+/** Right now this class seems to simply be a container for two HashMaps,
+ * one holding the counts of each attribute value found in the input data,
+ * and one holding only the counts of attributes for the positive classes.
+ * A problem I can see is this: if multiple attributes may have identically-
+ * named values, each value is counted as one, even though they exist for
+ * separate attributes.
+ * 
+ * Come to think of it, why are we counting attributes at all? We should
+ * actually be counting tuples.
+ */
 public class Gain {
 
 	//The attributes and counts

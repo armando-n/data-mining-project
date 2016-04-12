@@ -17,19 +17,20 @@ public class id3Launcher {
 	private static int 				positives, fields, positiveIndex;
 	private static gainCalculator 	gain;
 	
-	public static void main(String[] args){
-		int[] ignore = {5};
-		kickoff("Yes", 4, ignore);
-		
-	}
+//	public static void main(String[] args){
+//		int[] ignore = {5};
+//		kickoff("Yes", 4, ignore);
+//		
+//	}
 	public static void kickoff(String positiveAttributeName, int positiveAttrCol, int[] ignore) {
-		File data = new File("training");
+//		File data = new File("training");
+	    File data = new File("id3_simple-training-1.txt");
 		Scanner scanData = new Scanner(System.in);
 		int decisionIndex; 
 		
-		positiveKey = positiveAttributeName;
-		positiveIndex = positiveAttrCol;
-		fields = 5;
+		positiveKey = positiveAttributeName; // name of positive attribute value (e.g. "Yes" or "True")
+		positiveIndex = positiveAttrCol; // index of class label attribute/field
+		fields = 5; // number of attributes/fields per tuple
 		
 		gain = new gainCalculator(positiveIndex, fields, positiveKey);
 		
@@ -71,7 +72,7 @@ public class id3Launcher {
 		if(datas[positiveIndex].equals(positiveKey))
 			positives++;
 		
-		gain.addInfo(datas);
+		gain.addInfo(datas); // all tuples are added to gainCalculator as String arrays
 	}
 	
 	

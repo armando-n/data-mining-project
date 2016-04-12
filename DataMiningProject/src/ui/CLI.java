@@ -8,10 +8,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import application.AprioriSession;
+import application.ID3Session;
 
 public class CLI {
     private static final String PROGRAM_NAME = "dm-proj";
-    private static final String OPTIONS_ORDER = "iahdombc"; // specifies argument order in help/usage messages
+    
+    // general options
+    private static final String OPTIONS_ORDER = "iahdombcpl"; // specifies argument order in help/usage messages
     private static final String OPT_ALGORITHM_S = "a";
     private static final String OPT_ALGORITHM_L = "algorithm";
     private static final String OPT_INPUT_FILE_S = "i";
@@ -22,12 +25,20 @@ public class CLI {
     private static final String OPT_DELIMITER_L = "delimiter";
     private static final String OPT_HELP_S = "h";
     private static final String OPT_HELP_L = "help";
+    
+    // apriori options
     private static final String OPT_MIN_SUP_S = "m";
     private static final String OPT_MIN_SUP_L = "min-sup";
     private static final String OPT_BUCKET_MAX_S = "b";
     private static final String OPT_BUCKET_MAX_L= "bucket";
     private static final String OPT_CHILDREN_PER_NODE_S = "c";
     private static final String OPT_CHILDREN_PER_NODE_L = "children";
+    
+    // id3 options
+    private static final String OPT_POS_ATTR_NAME_S = "p";
+    private static final String OPT_POS_ATTR_NAME_L = "pos-name";
+    private static final String OPT_LABEL_INDEX_S = "l";
+    private static final String OPT_LABEL_INDEX_L = "label-index";
 
     private static Options helpOptions;
     private static Options mainOptions;
@@ -72,6 +83,10 @@ public class CLI {
         mainOptions.addOption(Option.builder(OPT_MIN_SUP_S).hasArg().argName("min-sup").longOpt(OPT_MIN_SUP_L).desc("apriori: absolute min support (required)").build());
         mainOptions.addOption(Option.builder(OPT_BUCKET_MAX_S).hasArg().argName("bucket-size").longOpt(OPT_BUCKET_MAX_L).desc("apriori: max bucket size for hash trees").build());
         mainOptions.addOption(Option.builder(OPT_CHILDREN_PER_NODE_S).hasArg().argName("#-per-node").longOpt(OPT_CHILDREN_PER_NODE_L).desc("apriori: # of children per node in hash trees").build());
+        
+        // create id3-specific options
+        mainOptions.addOption(Option.builder(OPT_POS_ATTR_NAME_S).hasArg().argName("pos-attr-name").longOpt(OPT_POS_ATTR_NAME_L).desc("id3: name of positive attribute, e.g. Yes").build());
+        mainOptions.addOption(Option.builder(OPT_LABEL_INDEX_S).hasArg().argName("label-index").longOpt(OPT_LABEL_INDEX_L).desc("id3: index of class label attribute").build());
     }
     
     private static void parseCommonOptions(String[] args) {
@@ -120,7 +135,20 @@ public class CLI {
     
     /** Handles the processing of id3-specific command line arguments, and sends request to run the algorithm. **/
     private static void id3() {
-        System.out.println("ID3 not yet implemented");
+        String posAttrName = null;
+        String labelIndex = null;
+        
+        // positive attribute name
+        if (cmd.hasOption(OPT_POS_ATTR_NAME_S))
+            posAttrName = cmd.getOptionValue(OPT_POS_ATTR_NAME_S);
+        
+        // class label index
+        if (cmd.hasOption(OPT_LABEL_INDEX_S))
+            labelIndex = cmd.getOptionValue(OPT_LABEL_INDEX_S);
+        
+        ID3Session.getSession().run(inputFileName, delimiter, outputFileName, posAttrName, labelIndex);
+        
+//        System.out.println("ID3 not yet implemented");
     }
     
     /** Handles the processing of kmeans-specific command line arguments, and sends request to run the algorithm. **/
