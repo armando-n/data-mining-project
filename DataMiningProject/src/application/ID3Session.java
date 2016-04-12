@@ -7,18 +7,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Scanner;
-import java.util.Set;
 import static java.lang.System.*;
 
 import domain.apriori.Apriori;
 import domain.apriori.HashTree;
-import domain.apriori.IntegerItem;
-import domain.apriori.ItemSet;
-import domain.apriori.StringItem;
 import domain.id3.ID3;
-import domain.id3.id3Launcher;
 
 public class ID3Session {
     
@@ -29,12 +23,13 @@ public class ID3Session {
     
     private static ID3Session id3Session; // singleton
     
-    private ArrayList<ArrayList<String>> tuples;
+    private ArrayList<String[]> tuples;
     private String inputFile;
     private String outputFile;
     private String delimiter;
     private String positiveAttributeName;
     private int classLabelIndex;
+    private ArrayList<String> attrTitles;
 
     private ID3Session() {
     }
@@ -44,6 +39,15 @@ public class ID3Session {
         if (id3Session == null)
             id3Session = new ID3Session();
         return id3Session;
+    }
+    
+    public static void main(String[] args) {
+        ID3Session.getSession().run(
+                "id3_simple-training-1.txt",
+                null,
+                "id3_output.txt",
+                "Yes",
+                "4");
     }
     
     /** Runs the apriori algorithm with the specified parameters. Default values can be used for everything except the input file.
@@ -64,9 +68,9 @@ public class ID3Session {
 //        }
         
         try {
-//            this.inputFile = inFile;
-//            this.delimiter = whichDelimiter(delimiter);
-//            this.outputFile = (outFile == null) ? OUTPUT_FILENAME_DEFAULT : outFile;
+            this.inputFile = inFile;
+            this.delimiter = whichDelimiter(delimiter);
+            this.outputFile = (outFile == null) ? OUTPUT_FILENAME_DEFAULT : outFile;
 //            this.positiveAttributeName = posAttrName;
 //            this.classLabelIndex = Integer.parseInt(labelIndex);
             
@@ -82,13 +86,13 @@ public class ID3Session {
             ArrayList<Integer> attributeList = new ArrayList<Integer>();
             attributeList.add(0); attributeList.add(1); attributeList.add(2);
             attributeList.add(3); attributeList.add(4);
-            ArrayList<String> attributeTitles = new ArrayList<String>();
-            attributeTitles.add("Outlook");
-            attributeTitles.add("Temperature");
-            attributeTitles.add("Humidity");
-            attributeTitles.add("Windy");
-            attributeTitles.add("Class");
-            ID3.getID3().run(tuples, attributeList, attributeTitles, "yes", 4);
+//            ArrayList<String> attributeTitles = new ArrayList<String>();
+//            attributeTitles.add("Outlook");
+//            attributeTitles.add("Temperature");
+//            attributeTitles.add("Humidity");
+//            attributeTitles.add("Windy");
+//            attributeTitles.add("Class");
+            ID3.getID3().run(tuples, attributeList, attrTitles.toArray(new String[attrTitles.size()]), "yes", 4);
 //            Apriori.getApriori().run(this.transactions, this.minSup, this.maxBucketSize, this.childrenPerNode);
             out.println("...algorithm finished.");
             
@@ -115,23 +119,31 @@ public class ID3Session {
     private void readID3Input() throws FileNotFoundException {
         Scanner fileScan = null;
         Scanner lineScan = null;
-        ArrayList<String> aTuple;
+        String[] aTuple;
+        attrTitles = new ArrayList<String>();
         
         if (delimiter == null || delimiter.isEmpty())
             delimiter = DELIMITER_DEFAULT;
         
         try {
         
-            tuples = new ArrayList<ArrayList<String>>();
+            tuples = new ArrayList<String[]>();
             fileScan = new Scanner(new BufferedReader(new FileReader(inputFile)));
             
+            // the first line of input should contain attribute titles
+            lineScan = new Scanner(fileScan.nextLine());
+            while (lineScan.hasNext())
+                attrTitles.add(lineScan.next());
+            lineScan.close();
+            
+            // the remaining lines should be the actual tuples
             while (fileScan.hasNextLine()) {
-                aTuple = new ArrayList<String>();
                 lineScan = new Scanner(fileScan.nextLine());
                 lineScan.useDelimiter(delimiter);
+                aTuple = new String[attrTitles.size()];
                 
-                while (lineScan.hasNext())
-                    aTuple.add(lineScan.next());
+                for (int i = 0; i < aTuple.length; i++)
+                    aTuple[i] = lineScan.next();
                 
                 tuples.add(aTuple);
                 lineScan.close();

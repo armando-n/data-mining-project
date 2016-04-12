@@ -14,8 +14,8 @@ public class ID3 {
         return id3;
     }
     
-    public void run(ArrayList<ArrayList<String>> tuples, ArrayList<Integer> attributeList
-            , ArrayList<String> attributeTitles, String positiveAttributeValue, int classLabelIndex) {
+    public void run(ArrayList<String[]> tuples, ArrayList<Integer> attributeList
+            , String[] attributeTitles, String positiveAttributeValue, int classLabelIndex) {
         
         Node decisionTree = new Node(tuples, attributeList, attributeTitles, positiveAttributeValue, classLabelIndex);
         

@@ -5,7 +5,7 @@ public class DecisionTree {
     private Node root;
 
     public DecisionTree() {
-        this.root = new Node();
+//        this.root = new Node();
     }
 
 }
