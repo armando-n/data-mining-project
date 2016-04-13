@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import static java.lang.System.*;
 
-import domain.apriori.Apriori;
-import domain.apriori.HashTree;
 import domain.id3.ID3;
 
 public class ID3Session {
@@ -43,7 +41,6 @@ public class ID3Session {
                 "id3_simple-training-1.txt",
                 null,
                 "id3_output.txt",
-                "Yes",
                 "4");
     }
     
@@ -51,25 +48,19 @@ public class ID3Session {
      * @param inFile The input file containing the data the apriori algorithm will be run on.
      * @param delimiter The delimiter used in the input file to separate attributes. If null, a default value is used.
      * @param outFile The file to write the algorithm's output to. If null, a default value is used.
-     * @param posAttrName The name of the positive attribute, e.g. "Yes" or "True".
-     * @param labelIndex The index of the class label column in the input file.
+     * @param classIndex The index of the class label column in the input file.
      */
-    public void run(String inFile, String delimiter, String outFile, String posAttrName, String labelIndex) {
-//        if (posAttrName == null) {
-//            err.println("Positive attribute name must be specified for the ID3 algorithm.");
-//            exit(1);
-//        }
-//        if (labelIndex == null) {
-//            err.println("The class label index must be specified for the ID3 algorithm.");
-//            exit(1);
-//        }
+    public void run(String inFile, String delimiter, String outFile, String classIndex) {
+        if (classIndex == null) {
+            err.println("The class label index must be specified for the ID3 algorithm.");
+            exit(1);
+        }
         
         try {
             this.inputFile = inFile;
             this.delimiter = whichDelimiter(delimiter);
             this.outputFile = (outFile == null) ? OUTPUT_FILENAME_DEFAULT : outFile;
-//            this.positiveAttributeName = posAttrName;
-//            this.classLabelIndex = Integer.parseInt(labelIndex);
+            this.classLabelIndex = Integer.parseInt(classIndex);
             
             out.println("\nID3\n");
             
@@ -78,11 +69,11 @@ public class ID3Session {
             out.println("Done.");
             
             out.println("Running ID3 algorithm...\n");
-            ID3.getID3().run(tuples, attrTitles.toArray(new String[attrTitles.size()]), "yes", 4);
+            ID3.getID3().run(tuples, attrTitles.toArray(new String[attrTitles.size()]), 4);
             out.println("...algorithm finished.");
             
             out.print("Writing to output file \"" + this.outputFile + "\"... ");
-//            this.writeOutput();
+            this.writeOutput();
             out.println("Done.");
         }
         catch (NumberFormatException e) {
@@ -93,10 +84,10 @@ public class ID3Session {
             err.println(e.getMessage());
             exit(1);
         }
-//        catch (IOException e) {
-//            err.println(e.getMessage());
-//            exit(1);
-//        }
+        catch (IOException e) {
+            err.println(e.getMessage());
+            exit(1);
+        }
     }
     
     /** Attempts to read from this.inputFile and generate the list of this.transactions.
@@ -153,10 +144,8 @@ public class ID3Session {
             writer.newLine();
             writer.newLine();
             
-            for (HashTree tree : Apriori.getApriori().getHashTrees()) {
-                writer.write(tree.toString());
-                writer.newLine();
-            }
+            writer.write(ID3.getID3().drawDecisionTree());
+            writer.newLine();
         }
         catch (IOException e) { throw new IOException("Unable to write to output file \"" + outputFile + "\""); }
         finally {

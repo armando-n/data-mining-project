@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 public class ID3 {
     private static ID3 id3; // singleton
+    
+    private DecisionTree decisionTree;
 
     private ID3() {
     }
@@ -14,10 +16,14 @@ public class ID3 {
         return id3;
     }
     
-    public void run(ArrayList<String[]> tuples, String[] attributeTitles, String positiveAttributeValue, int classLabelIndex) {
+    public void run(ArrayList<String[]> tuples, String[] attributeTitles, int classLabelIndex) {
         
-        DecisionTree decisionTree = new DecisionTree(tuples, attributeTitles, classLabelIndex);
+        decisionTree = new DecisionTree(tuples, attributeTitles, classLabelIndex);
         System.out.println(decisionTree.toString());
+    }
+    
+    public String drawDecisionTree() {
+        return decisionTree.toString();
     }
 
 }
