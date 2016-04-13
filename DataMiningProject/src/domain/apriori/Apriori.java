@@ -29,30 +29,30 @@ public class Apriori {
      */
     public void run(Set<ItemSet> transactions, int absoluteMinSupport,
             int maxBucketSize, int childrenPerNode) {
-        HashTree kMinusOneItemSetTree;
-        HashTree kItemSetTree;
+        HashTree k_1_Itemsets;
+        HashTree k_Itemsets;
         hashTrees = new ArrayList<HashTree>();
         
         /* count the occurrences of all 1-itemsets in transactions, creating C_1,
          * the set of candidate 1-itemsets. Then remove candidates that do not meet
          * minimum support to create L_1, the set of frequent 1-itemsets. */
-        kItemSetTree = new HashTree(1, absoluteMinSupport, maxBucketSize, childrenPerNode);
-        kItemSetTree.addAll(transactions);
-        kItemSetTree.incFrequencies();
-        kItemSetTree.removeNoMinSupport();
+        k_Itemsets = new HashTree(1, absoluteMinSupport, maxBucketSize, childrenPerNode);
+        k_Itemsets.addAll(transactions);
+        k_Itemsets.incFrequencies();
+        k_Itemsets.removeNoMinSupport();
         
-        while (!kItemSetTree.isEmpty()) {
-            hashTrees.add(kItemSetTree);
-            System.out.println(kItemSetTree.toString());
-            kMinusOneItemSetTree = kItemSetTree;
+        while (!k_Itemsets.isEmpty()) {
+            hashTrees.add(k_Itemsets);
+            System.out.println(k_Itemsets.toString());
+            k_1_Itemsets = k_Itemsets;
             
             // join L_(k-1) with itself and prune resulting k-itemset hash tree to create C_k
-            kItemSetTree = kMinusOneItemSetTree.generateNextCandidateTree();
-            kItemSetTree.prune(kMinusOneItemSetTree);
+            k_Itemsets = k_1_Itemsets.generateNextCandidateTree();
+            k_Itemsets.prune(k_1_Itemsets);
             
             // create L_k by counting candidate k-itemsets and removing those that don't meet minimum support
-            kItemSetTree.countCandidates(transactions);
-            kItemSetTree.removeNoMinSupport();
+            k_Itemsets.countCandidates(transactions);
+            k_Itemsets.removeNoMinSupport();
         }
     }
     
