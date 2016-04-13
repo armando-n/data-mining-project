@@ -12,20 +12,8 @@ public class DecisionTree extends Node {
             whatClass = tuples.get(0)[classLabelIndex];
         
         // no attributes are left to split the data on; use majority voting
-        else if (! attributesRemain(attributeTitles)) {
-            Map<String, Integer> classFrequencies = countClassFrequencies(tuples, classLabelIndex);
-            String mostFrequentClass = null;
-            int maxFrequency = 0;
-            
-            for (String classLabel : classFrequencies.keySet()) {
-                if (classFrequencies.get(classLabel) > maxFrequency) {   
-                    maxFrequency = classFrequencies.get(classLabel);
-                    mostFrequentClass = classLabel;
-                }
-            }
-            
-            whatClass = mostFrequentClass;
-        }
+        else if (! attributesRemain(attributeTitles))
+            whatClass = majorityClass(tuples, classLabelIndex);
         
         // use information gain to determine the splitting criterion
         else {

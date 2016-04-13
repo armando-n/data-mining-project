@@ -88,18 +88,7 @@ public class Node {
         return false;
     }
     
-    protected Map<String, Integer> countClassFrequencies(ArrayList<String[]> tuples, int classIndex) {
-        Map<String, Integer> classFrequencies = new HashMap<String, Integer>();
-        for (String[] tuple : tuples) {
-            if (classFrequencies.containsKey(tuple[classIndex]))
-                classFrequencies.put(tuple[classIndex], classFrequencies.get(tuple[classIndex])+1);
-            else
-                classFrequencies.put(tuple[classIndex], 1);
-        }
-        return classFrequencies;
-    }
-    
-    private String majorityClass(ArrayList<String[]> tuples, int classLabelIndex) {
+    protected String majorityClass(ArrayList<String[]> tuples, int classLabelIndex) {
         Map<String, Integer> classFrequencies = countClassFrequencies(tuples, classLabelIndex);
         String mostFrequentClass = null;
         int maxFrequency = 0;
@@ -112,6 +101,17 @@ public class Node {
         }
         
         return mostFrequentClass;
+    }
+    
+    protected Map<String, Integer> countClassFrequencies(ArrayList<String[]> tuples, int classIndex) {
+        Map<String, Integer> classFrequencies = new HashMap<String, Integer>();
+        for (String[] tuple : tuples) {
+            if (classFrequencies.containsKey(tuple[classIndex]))
+                classFrequencies.put(tuple[classIndex], classFrequencies.get(tuple[classIndex])+1);
+            else
+                classFrequencies.put(tuple[classIndex], 1);
+        }
+        return classFrequencies;
     }
 
     protected void splitData(ArrayList<String[]> tuples, Attribute[] attributes, int classIndex) {
