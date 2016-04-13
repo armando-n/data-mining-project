@@ -18,8 +18,6 @@ public class ID3Session {
     
     private static final String DELIMITER_DEFAULT = "\\s+";
     private static final String OUTPUT_FILENAME_DEFAULT = "output_id3.txt";
-//    private static final int MAX_BUCKET_SIZE_DEFAULT = 5;
-//    private static final int CHILDREN_DEFAULT = 3;
     
     private static ID3Session id3Session; // singleton
     
@@ -27,7 +25,6 @@ public class ID3Session {
     private String inputFile;
     private String outputFile;
     private String delimiter;
-    private String positiveAttributeName;
     private int classLabelIndex;
     private ArrayList<String> attrTitles;
 
@@ -81,19 +78,7 @@ public class ID3Session {
             out.println("Done.");
             
             out.println("Running ID3 algorithm...\n");
-//            int[] ignore = {5};
-//            id3Launcher.kickoff("Yes", 4, ignore);
-            ArrayList<Integer> attributeList = new ArrayList<Integer>();
-            attributeList.add(0); attributeList.add(1); attributeList.add(2);
-            attributeList.add(3); attributeList.add(4);
-//            ArrayList<String> attributeTitles = new ArrayList<String>();
-//            attributeTitles.add("Outlook");
-//            attributeTitles.add("Temperature");
-//            attributeTitles.add("Humidity");
-//            attributeTitles.add("Windy");
-//            attributeTitles.add("Class");
-            ID3.getID3().run(tuples, attributeList, attrTitles.toArray(new String[attrTitles.size()]), "yes", 4);
-//            Apriori.getApriori().run(this.transactions, this.minSup, this.maxBucketSize, this.childrenPerNode);
+            ID3.getID3().run(tuples, attrTitles.toArray(new String[attrTitles.size()]), "yes", 4);
             out.println("...algorithm finished.");
             
             out.print("Writing to output file \"" + this.outputFile + "\"... ");
