@@ -63,8 +63,8 @@ public class Node {
         String result = "";
         
         for (int i = 0; i < level; i++)
-            result += "            ";
-        result += "`-- " + splitOnValue + " --> ";
+            result += (level == 1) ? "   " : "            ";
+        result += String.format("`-- %s --> ", splitOnValue);
         
         result += (whatClass == null) ? "[" + splittingCriterionTitle + "?]" : whatClass;
         result += String.format("%n");
