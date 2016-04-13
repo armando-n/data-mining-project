@@ -17,13 +17,16 @@ public class ID3 {
     }
     
     public void run(ArrayList<String[]> tuples, String[] attributeTitles, int classLabelIndex) {
-        
         decisionTree = new DecisionTree(tuples, attributeTitles, classLabelIndex);
         System.out.println(decisionTree.toString());
     }
     
     public String drawDecisionTree() {
         return decisionTree.toString();
+    }
+    
+    public void classify(ArrayList<String[]> tuples, String[] attributeTitles, int classIndex) {
+        decisionTree.classify(tuples, attributeTitles, classIndex);
     }
 
 }

@@ -19,12 +19,13 @@ public class ID3Session {
     
     private static ID3Session id3Session; // singleton
     
-    private ArrayList<String[]> tuples;
-    private String inputFile;
-    private String outputFile;
+    private ArrayList<String[]> trainingTuples;
+    private ArrayList<String[]> testingTuples;
+//    private String inputFile;
+//    private String outputFile;
     private String delimiter;
-    private int classLabelIndex;
-    private ArrayList<String> attrTitles;
+//    private int classLabelIndex;
+//    private ArrayList<String> attrTitles;
 
     private ID3Session() {
     }
@@ -38,10 +39,11 @@ public class ID3Session {
     
     public static void main(String[] args) {
         ID3Session.getSession().run(
-                "id3_simple-training-1.txt",
+                "id3_simple-training-2.txt",
                 null,
                 "id3_output.txt",
-                "4");
+                "4",
+                "id3_simple-testing-2.txt");
     }
     
     /** Runs the apriori algorithm with the specified parameters. Default values can be used for everything except the input file.
@@ -50,31 +52,50 @@ public class ID3Session {
      * @param outFile The file to write the algorithm's output to. If null, a default value is used.
      * @param classIndex The index of the class label column in the input file.
      */
-    public void run(String inFile, String delimiter, String outFile, String classIndex) {
-        if (classIndex == null) {
+    public void run(String inFile, String delimiter, String outFile, String classIndexString, String testingFile) {
+        int classIndex;
+        String[] attrTitles;
+        String[] testingAttrTitles;
+        
+        if (classIndexString == null) {
             err.println("The class label index must be specified for the ID3 algorithm.");
             exit(1);
         }
         
         try {
-            this.inputFile = inFile;
             this.delimiter = whichDelimiter(delimiter);
-            this.outputFile = (outFile == null) ? OUTPUT_FILENAME_DEFAULT : outFile;
-            this.classLabelIndex = Integer.parseInt(classIndex);
+            outFile = (outFile == null) ? OUTPUT_FILENAME_DEFAULT : outFile;
+            classIndex = Integer.parseInt(classIndexString);
             
             out.println("\nID3\n");
             
-            out.print("Reading input... ");
-            this.readID3Input();
+            out.format("Reading input from \"%s\"... ", inFile);
+            attrTitles = readID3Input(inFile);
             out.println("Done.");
             
             out.println("Running ID3 algorithm...\n");
-            ID3.getID3().run(tuples, attrTitles.toArray(new String[attrTitles.size()]), this.classLabelIndex);
+            ID3.getID3().run(trainingTuples, attrTitles, classIndex);
             out.println("...algorithm finished.");
             
-            out.print("Writing to output file \"" + this.outputFile + "\"... ");
-            this.writeOutput();
+            out.format("Writing to output file \"%s\"... ", outFile);
+            writeOutput(outFile);
             out.println("Done.");
+            
+            if (testingFile != null) {
+                out.format("Reading testing data from \"%s\"... ", testingFile);
+                readTestingInput(testingFile, attrTitles);
+                out.println("Done.");
+                
+                testingAttrTitles = new String[attrTitles.length];
+                System.arraycopy(attrTitles, 0, testingAttrTitles, 0, attrTitles.length);
+                
+                out.print("Classifying tuples... ");
+                ID3.getID3().classify(testingTuples, testingAttrTitles, classIndex);
+                out.format("Done.%n%n");
+                
+                out.println("Classification results:");
+                printTuples(testingTuples, testingAttrTitles);
+            }
         }
         catch (NumberFormatException e) {
             err.println("Unable to parse integer. Make sure integer arguments are valid integers.");
@@ -91,19 +112,19 @@ public class ID3Session {
     }
     
     /** Attempts to read from this.inputFile and generate the list of this.transactions.
-     * If the input file cannot be found, an error message is printed and the method returns. **/
-    private void readID3Input() throws FileNotFoundException {
+     * @return An array of attribute titles **/
+    private String[] readID3Input(String inputFile) throws FileNotFoundException {
         Scanner fileScan = null;
         Scanner lineScan = null;
         String[] aTuple;
-        attrTitles = new ArrayList<String>();
+        ArrayList<String> attrTitles = new ArrayList<String>();
         
         if (delimiter == null || delimiter.isEmpty())
             delimiter = DELIMITER_DEFAULT;
         
         try {
         
-            tuples = new ArrayList<String[]>();
+            trainingTuples = new ArrayList<String[]>();
             fileScan = new Scanner(new BufferedReader(new FileReader(inputFile)));
             
             // the first line of input should contain attribute titles
@@ -112,7 +133,7 @@ public class ID3Session {
                 attrTitles.add(lineScan.next());
             lineScan.close();
             
-            // the remaining lines should be the actual tuples
+            // the remaining lines should be the actual trainingTuples
             while (fileScan.hasNextLine()) {
                 lineScan = new Scanner(fileScan.nextLine());
                 lineScan.useDelimiter(delimiter);
@@ -121,7 +142,7 @@ public class ID3Session {
                 for (int i = 0; i < aTuple.length; i++)
                     aTuple[i] = lineScan.next();
                 
-                tuples.add(aTuple);
+                trainingTuples.add(aTuple);
                 lineScan.close();
             }
         }
@@ -132,11 +153,13 @@ public class ID3Session {
             if (lineScan != null)
                 lineScan.close();
         }
+        
+        return attrTitles.toArray(new String[attrTitles.size()]);
     }
 
     /** Attempts to write the algorithm's output to this.outputFile.
      * If the output file cannot be found, an error message is printed and the method returns. **/
-    private void writeOutput() throws IOException {
+    private void writeOutput(String outputFile) throws IOException {
         BufferedWriter writer = null;
         try {
             writer = new BufferedWriter(new FileWriter(outputFile));
@@ -151,6 +174,41 @@ public class ID3Session {
         finally {
             try { if (writer != null) writer.close(); }
             catch (IOException e) { }
+        }
+    }
+    
+    private void readTestingInput(String testingFile, String[] attrTitles) throws FileNotFoundException {
+        Scanner fileScan = null;
+        Scanner lineScan = null;
+        String[] aTuple;
+        
+        if (delimiter == null || delimiter.isEmpty())
+            delimiter = DELIMITER_DEFAULT;
+        
+        try {
+        
+            testingTuples = new ArrayList<String[]>();
+            fileScan = new Scanner(new BufferedReader(new FileReader(testingFile)));
+            
+            // read trainingTuples
+            while (fileScan.hasNextLine()) {
+                lineScan = new Scanner(fileScan.nextLine());
+                lineScan.useDelimiter(delimiter);
+                aTuple = new String[attrTitles.length];
+                
+                for (int i = 0; i < aTuple.length-1; i++) // last slot should be class slot, and is empty
+                    aTuple[i] = lineScan.next();
+                
+                testingTuples.add(aTuple);
+                lineScan.close();
+            }
+        }
+        catch (FileNotFoundException e) { throw new FileNotFoundException(String.format("Testing file \"%s\" not found", testingFile)); }
+        finally {
+            if (fileScan != null)
+                fileScan.close();
+            if (lineScan != null)
+                lineScan.close();
         }
     }
     
@@ -169,6 +227,26 @@ public class ID3Session {
             return "\\t+";
         
         return "\\s*" + delimiter + "\\s*";
+    }
+    
+    private void printTuples(ArrayList<String[]> tuples, String[] attributeTitles) {
+        for (String attrTitle : attributeTitles) {
+            if (attrTitle.length() < 5)
+                out.format("%-"+(14)+"s", attrTitle);
+            else
+                out.format("%-"+(attrTitle.length()+4)+"s", attrTitle);
+        }
+        out.format("%n");
+        
+        for (String[] tuple : tuples) {
+            for (int i = 0; i < attributeTitles.length; i++) {
+                if (attributeTitles[i].length() < 5)
+                    out.format("%-"+(14)+"s", tuple[i]);
+                else
+                    out.format("%-"+(attributeTitles[i].length()+4)+"s", tuple[i]);
+            }
+            out.format("%n");
+        }
     }
     
 }

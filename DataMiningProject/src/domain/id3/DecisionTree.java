@@ -1,7 +1,6 @@
 package domain.id3;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class DecisionTree extends Node {
 
@@ -26,6 +25,17 @@ public class DecisionTree extends Node {
         }
     }
     
+    public void classify(ArrayList<String[]> tuples, String[] attributeTitles, int classIndex) {
+        for (String[] tuple : tuples) {
+            for (Node child : children) {
+                if (child.splitOnValue.equals(tuple[splittingCriterion])) {
+                    child.classify(tuple, attributeTitles, classIndex);
+                    break;
+                }
+            }
+        }
+    }
+    
     /**
      * @param attributes An array of attribute names. A removed attribute must be indicated
      *        with a null value.
@@ -42,10 +52,7 @@ public class DecisionTree extends Node {
     public String toString() {
         String result = "";
         
-        if (whatClass != null)
-            result += whatClass;
-        else
-            result += "[" + splittingCriterionTitle + "?]";
+        result += (whatClass == null) ? "[" + splittingCriterionTitle + "?]" : whatClass;
         result += String.format("%n");
         
         for (Node child : children)

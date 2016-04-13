@@ -14,7 +14,7 @@ public class CLI {
     private static final String PROGRAM_NAME = "dm-proj";
     
     // general options
-    private static final String OPTIONS_ORDER = "iahdombcl"; // specifies argument order in help/usage messages
+    private static final String OPTIONS_ORDER = "iahdombclt"; // specifies argument order in help/usage messages
     private static final String OPT_ALGORITHM_S = "a";
     private static final String OPT_ALGORITHM_L = "algorithm";
     private static final String OPT_INPUT_FILE_S = "i";
@@ -37,6 +37,8 @@ public class CLI {
     // id3 options
     private static final String OPT_LABEL_INDEX_S = "l";
     private static final String OPT_LABEL_INDEX_L = "label-index";
+    private static final String OPT_TESTING_FILE_S = "t";
+    private static final String OPT_TESTING_FILE_L = "testing-file";
 
     private static Options helpOptions;
     private static Options mainOptions;
@@ -83,7 +85,8 @@ public class CLI {
         mainOptions.addOption(Option.builder(OPT_CHILDREN_PER_NODE_S).hasArg().argName("#-per-node").longOpt(OPT_CHILDREN_PER_NODE_L).desc("apriori: # of children per node in hash trees").build());
         
         // create id3-specific options
-        mainOptions.addOption(Option.builder(OPT_LABEL_INDEX_S).hasArg().argName("label-index").longOpt(OPT_LABEL_INDEX_L).desc("id3: index of class label attribute").build());
+        mainOptions.addOption(Option.builder(OPT_LABEL_INDEX_S).hasArg().argName("label-index").longOpt(OPT_LABEL_INDEX_L).desc("id3: index of class label attribute (required)").build());
+        mainOptions.addOption(Option.builder(OPT_TESTING_FILE_S).hasArg().argName("testing-file").longOpt(OPT_TESTING_FILE_L).desc("id3: unlabled data to classify").build());
     }
     
     private static void parseCommonOptions(String[] args) {
@@ -133,12 +136,17 @@ public class CLI {
     /** Handles the processing of id3-specific command line arguments, and sends request to run the algorithm. **/
     private static void id3() {
         String labelIndex = null;
+        String testingFile = null;
         
         // class label index
         if (cmd.hasOption(OPT_LABEL_INDEX_S))
             labelIndex = cmd.getOptionValue(OPT_LABEL_INDEX_S);
         
-        ID3Session.getSession().run(inputFileName, delimiter, outputFileName, labelIndex);
+        // testing file
+        if (cmd.hasOption(OPT_TESTING_FILE_S))
+            testingFile = cmd.getOptionValue(OPT_TESTING_FILE_L);
+        
+        ID3Session.getSession().run(inputFileName, delimiter, outputFileName, labelIndex, testingFile);
     }
     
     /** Handles the processing of kmeans-specific command line arguments, and sends request to run the algorithm. **/

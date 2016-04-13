@@ -46,6 +46,19 @@ public class Node {
         }
     }
     
+    public void classify(String[] tuple, String[] attributeTitles, int classIndex) {
+        if (whatClass != null)
+            tuple[classIndex] = whatClass;
+        else {
+            for (Node child : children) {
+                if (child.splitOnValue.equals(tuple[splittingCriterion])) {
+                    child.classify(tuple, attributeTitles, classIndex);
+                    break;
+                }
+            }
+        }
+    }
+    
     public String toString(int level) {
         String result = "";
         
@@ -53,16 +66,13 @@ public class Node {
             result += "            ";
         result += "`-- " + splitOnValue + " --> ";
         
-        if (whatClass != null)
-            result += whatClass;
-        else
-            result += "[" + splittingCriterionTitle + "?]";
+        result += (whatClass == null) ? "[" + splittingCriterionTitle + "?]" : whatClass;
         result += String.format("%n");
         
         if (children != null) {
-            int newLevel = ++level;
+            int nextLevel = level + 1;
             for (Node child : children)
-                result += child.toString(newLevel);
+                result += child.toString(nextLevel);
         }
         
         return result;
@@ -121,18 +131,12 @@ public class Node {
         
         // create map to contain a list of tuples for each value of the splitting criterion attribute
         subsetsByValue = new HashMap<String, ArrayList<String[]>>();
+        
         for (String value : attributes[splittingCriterion].getValues())
             subsetsByValue.put(value, new ArrayList<String[]>());
         
-        for (String[] tuple : tuples) {
-            
-//            if (subsetsByValue.containsKey(tuple[splittingCriterion]))
-                subsetsByValue.get(tuple[splittingCriterion]).add(tuple);
-//            else {
-//                subsetsByValue.put(tuple[splittingCriterion], new ArrayList<String[]>());
-//                subsetsByValue.get(tuple[splittingCriterion]).add(tuple);
-//            }
-        }
+        for (String[] tuple : tuples)
+            subsetsByValue.get(tuple[splittingCriterion]).add(tuple);
         
         // remove splitting attribute out from further consideration
         newAttrs = new Attribute[attributes.length];
