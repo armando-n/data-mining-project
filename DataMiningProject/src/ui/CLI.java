@@ -139,8 +139,6 @@ public class CLI {
             labelIndex = cmd.getOptionValue(OPT_LABEL_INDEX_S);
         
         ID3Session.getSession().run(inputFileName, delimiter, outputFileName, labelIndex);
-        
-//        System.out.println("ID3 not yet implemented");
     }
     
     /** Handles the processing of kmeans-specific command line arguments, and sends request to run the algorithm. **/

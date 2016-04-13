@@ -69,7 +69,7 @@ public class ID3Session {
             out.println("Done.");
             
             out.println("Running ID3 algorithm...\n");
-            ID3.getID3().run(tuples, attrTitles.toArray(new String[attrTitles.size()]), 4);
+            ID3.getID3().run(tuples, attrTitles.toArray(new String[attrTitles.size()]), this.classLabelIndex);
             out.println("...algorithm finished.");
             
             out.print("Writing to output file \"" + this.outputFile + "\"... ");
