@@ -9,40 +9,63 @@ public class Node {
     
     protected Integer splittingCriterion; // index of the attribute used to split the data at this node 
     protected String splittingCriterionTitle;
-    private Node[] children; // the size of this array cannot be determined until the splitting criterion is chosen
+    protected String splitOnValue;
+    protected Node[] children; // the size of this array cannot be determined until the splitting criterion is chosen
     protected String whatClass;
     protected InformationGain infoGain;
+    
+    public Node() {
+    }
+    
+    /** Creates the node as a leaf node labeled with the specified class **/
+    public Node(String whatClass, String valueSplitOn) {
+        this.whatClass = whatClass;
+        this.splitOnValue = valueSplitOn;
+    }
 
-    public Node(ArrayList<String[]> tuples, String[] attributeTitles, int classLabelIndex) {
+    public Node(ArrayList<String[]> tuples, Attribute[] attributes, int classLabelIndex, String valueSplitOn) {
+        
+        this.splitOnValue = valueSplitOn;
         
         // all tuples are of the same class; label this as a leaf node with class name
         if (isHomogenous(tuples, classLabelIndex))
             whatClass = tuples.get(0)[classLabelIndex];
         
         // no attributes are left to split the data on; use majority voting
-        else if (! attributesRemain(attributeTitles)) {
-            Map<String, Integer> classFrequencies = countClassFrequencies(tuples, classLabelIndex);
-            String mostFrequentClass = null;
-            int maxFrequency = 0;
-            
-            for (String classLabel : classFrequencies.keySet()) {
-                if (classFrequencies.get(classLabel) > maxFrequency) {   
-                    maxFrequency = classFrequencies.get(classLabel);
-                    mostFrequentClass = classLabel;
-                }
-            }
-            
-            whatClass = mostFrequentClass;
-        }
+        else if (! attributesRemain(attributes))
+            whatClass = majorityClass(tuples, classLabelIndex);
         
         // use information gain to determine the splitting criterion
         else {
-            infoGain = new InformationGain(tuples, attributeTitles, classLabelIndex);
+            infoGain = new InformationGain();
+            infoGain.run(tuples, attributes, classLabelIndex);
             splittingCriterion = infoGain.getResult();
             splittingCriterionTitle = infoGain.getResultTitle();
             
-            splitData(tuples, attributeTitles, classLabelIndex, infoGain.getAttributeInfo());
+            splitData(tuples, attributes, classLabelIndex);
         }
+    }
+    
+    public String toString(int level) {
+        String result = "";
+        
+        for (int i = 0; i < level; i++)
+            result += "            ";
+        result += "`-- " + splitOnValue + " --> ";
+        
+        if (whatClass != null)
+            result += whatClass;
+        else
+            result += "[" + splittingCriterionTitle + "?]";
+        result += String.format("%n");
+        
+        if (children != null) {
+            int newLevel = ++level;
+            for (Node child : children)
+                result += child.toString(newLevel);
+        }
+        
+        return result;
     }
     
     protected boolean isHomogenous(ArrayList<String[]> tuples, int classLabelIndex) {
@@ -54,12 +77,12 @@ public class Node {
     }
     
     /**
-     * @param attributes An array of attribute names. A removed attribute must be indicated
+     * @param attributes An array of Attribute objects. A removed attribute must be indicated
      *        with a null value.
      * @return True if there are still attributes in the given attribute array, false otherwise.
      */
-    protected boolean attributesRemain(String[] attributeTitles) {
-        for (String attribute : attributeTitles)
+    protected boolean attributesRemain(Attribute[] attributes) {
+        for (Attribute attribute : attributes)
             if (attribute != null)
                 return true;
         return false;
@@ -75,35 +98,57 @@ public class Node {
         }
         return classFrequencies;
     }
-
-    protected void splitData(ArrayList<String[]> tuples, String[] attributeTitles
-            , int classIndex, Map<String, String[]>[] attrInfo) {
-        Map<String, ArrayList<String[]>> subsetsByValue;
-        Iterator<ArrayList<String[]>> subsetsIter;
-        String[] newAttrTitles;
+    
+    private String majorityClass(ArrayList<String[]> tuples, int classLabelIndex) {
+        Map<String, Integer> classFrequencies = countClassFrequencies(tuples, classLabelIndex);
+        String mostFrequentClass = null;
+        int maxFrequency = 0;
         
-        // create map to contain a list of tuples for each value of the splitting criterion attribute
-        subsetsByValue = new HashMap<String, ArrayList<String[]>>();
-        
-        for (String[] tuple : tuples) {
-            if (subsetsByValue.containsKey(tuple[splittingCriterion]))
-                subsetsByValue.get(tuple[splittingCriterion]).add(tuple);
-            else {
-                subsetsByValue.put(tuple[splittingCriterion], new ArrayList<String[]>());
-                subsetsByValue.get(tuple[splittingCriterion]).add(tuple);
+        for (String classLabel : classFrequencies.keySet()) {
+            if (classFrequencies.get(classLabel) > maxFrequency) {   
+                maxFrequency = classFrequencies.get(classLabel);
+                mostFrequentClass = classLabel;
             }
         }
         
+        return mostFrequentClass;
+    }
+
+    protected void splitData(ArrayList<String[]> tuples, Attribute[] attributes, int classIndex) {
+        Map<String, ArrayList<String[]>> subsetsByValue;
+        Iterator<String> subsetsIter;
+        Attribute[] newAttrs;
+        
+        // create map to contain a list of tuples for each value of the splitting criterion attribute
+        subsetsByValue = new HashMap<String, ArrayList<String[]>>();
+        for (String value : attributes[splittingCriterion].getValues())
+            subsetsByValue.put(value, new ArrayList<String[]>());
+        
+        for (String[] tuple : tuples) {
+            
+//            if (subsetsByValue.containsKey(tuple[splittingCriterion]))
+                subsetsByValue.get(tuple[splittingCriterion]).add(tuple);
+//            else {
+//                subsetsByValue.put(tuple[splittingCriterion], new ArrayList<String[]>());
+//                subsetsByValue.get(tuple[splittingCriterion]).add(tuple);
+//            }
+        }
+        
         // remove splitting attribute out from further consideration
-        newAttrTitles = new String[attributeTitles.length];
-        System.arraycopy(attributeTitles, 0, newAttrTitles, 0, attributeTitles.length);
-        newAttrTitles[splittingCriterion] = null;
+        newAttrs = new Attribute[attributes.length];
+        System.arraycopy(attributes, 0, newAttrs, 0, attributes.length);
+        newAttrs[splittingCriterion] = null;
         
         // create child nodes for each value of the splitting criterion attribute; pass corresponding subsets
         children = new Node[subsetsByValue.values().size()];
-        subsetsIter = subsetsByValue.values().iterator();
+        subsetsIter = subsetsByValue.keySet().iterator();
         for (int i = 0; i < children.length; i++) {
-            children[i] = new Node(subsetsIter.next(), newAttrTitles, classIndex);
+            String currentValue = subsetsIter.next();
+            ArrayList<String[]> currentSubset = subsetsByValue.get(currentValue);
+            if (currentSubset.isEmpty())
+                children[i] = new Node(majorityClass(tuples, classIndex), currentValue);
+            else
+                children[i] = new Node(currentSubset, newAttrs, classIndex, currentValue);
         }
     }
 }

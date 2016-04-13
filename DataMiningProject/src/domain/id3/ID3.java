@@ -16,8 +16,8 @@ public class ID3 {
     
     public void run(ArrayList<String[]> tuples, String[] attributeTitles, String positiveAttributeValue, int classLabelIndex) {
         
-        Node decisionTree = new Node(tuples, attributeTitles, classLabelIndex);
-        
+        DecisionTree decisionTree = new DecisionTree(tuples, attributeTitles, classLabelIndex);
+        System.out.println(decisionTree.toString());
     }
 
 }

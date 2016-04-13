@@ -27,14 +27,15 @@ public class InformationGain {
         run(tuples, attributes, classIndex);
     }
     
-    public void run(ArrayList<String[]> tuples, Attribute[] attrTitles, int classIndex) {
+    public void run(ArrayList<String[]> tuples, Attribute[] attrs, int classIndex) {
         Map<String, Integer>[] attributeFrequencies;
         double entropy;
         double entropyAfterSplit;
         double maxGain;
         
-        gains = new Double[attrTitles.length];
+        gains = new Double[attrs.length];
         classLabelIndex = classIndex;
+        attributes = attrs;
         
         // create array of value-to-frequency maps; each cell in the array corresponds to the attributes in attributes array
         attributeFrequencies = countAttributeFrequencies(tuples);
@@ -43,10 +44,10 @@ public class InformationGain {
         entropy = calculateEntropy(attributeFrequencies, classIndex, tuples.size());
         
         // calculate the expected information required to classify a tuple from D based on partitioning by each attribute A
-        for (int i = 0; i < attrTitles.length; i++) {
+        for (int i = 0; i < attrs.length; i++) {
             
             // null attribute titles mean that attribute has already been split on, and we never split on the class label attribute
-            if (attrTitles[i] == null || i == classIndex)
+            if (attrs[i] == null || i == classIndex)
                 continue;
             
             entropyAfterSplit = calculateEntropyAfterSplit(tuples, attributeFrequencies, i, classIndex);
@@ -56,9 +57,10 @@ public class InformationGain {
         // whichever attribute has the highest information gain is the chosen result of the information gain algorithm
         maxGain = 0.0;
         for (int i = 0; i < gains.length; i++) {
-            if (gains[i] != null && gains[i] > maxGain) {
+            if (gains[i] != null && gains[i].doubleValue() > maxGain) {
+                maxGain = gains[i];
                 attributeIndex = i;
-                attributeTitle = attrTitles[i].getTitle();
+                attributeTitle = attrs[i].getTitle();
             }
         }
     }
