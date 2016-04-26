@@ -1,0 +1,11 @@
+ID3
+
+[Age?]
+   `-- senior --> [Credit_Rating?]
+                        `-- excellent --> no
+                        `-- fair --> yes
+   `-- middle_aged --> yes
+   `-- youth --> [Student?]
+                        `-- no --> no
+                        `-- yes --> yes
+
