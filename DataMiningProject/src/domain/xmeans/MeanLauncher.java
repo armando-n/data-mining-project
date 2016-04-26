@@ -29,12 +29,7 @@ public class MeanLauncher {
 	
 	//For randomly adding centroids, the max for x and y to set
 	private static double maxX = 0.0, maxY = 0.0;
-	
-	
-	public static void main(String[] args){
-		runXMeans("test", 1, 5);
-	}
-	
+	private static File in;		
 	
 	/**
 	 * This is the main driver for xmeans
@@ -47,6 +42,7 @@ public class MeanLauncher {
 		centers	= new ArrayList<Centroid>();
 		allPoints = new ArrayList<ClusterPoint>();
 		
+		in = new File(dataSet);
 		int currK = kLow, actualK = kLow;
 		
 		try{
@@ -236,7 +232,7 @@ public class MeanLauncher {
 	private static void randomlyAddCentroids(int k) {
 
 		Random ran = new Random();
-			
+		
 		for(int i = 0; i < k; i++){
 			double x = ran.nextInt((int)maxX);
 			double y = ran.nextInt((int)maxY);
@@ -312,7 +308,7 @@ public class MeanLauncher {
 
 	public static void parseData(String line) throws InputMismatchException{
 		
-		int x = 0, y = 0, cluster = 0;
+		int x = 0, y = 0;
 		double dx = 0, dy = 0;
 		Scanner lineData = new Scanner(line);
 		ClusterPoint point;
@@ -333,13 +329,19 @@ public class MeanLauncher {
 		if(y > maxY)
 			maxY = x;
 		
-		allPoints.add(point);		
+		if(dx > maxX)
+			maxX = dx;
 		
+		if(dy > maxY)
+			maxY = dy;
+		
+		allPoints.add(point);		
+		lineData.close();
 	}
 	
+	@SuppressWarnings("resource")
 	private static void addDataFromSet(String dataSet) throws InputMismatchException{
-		File in = new File("test");
-		String line = "";		
+		
 		Scanner data = new Scanner(System.in);
 		
 		try {
@@ -353,7 +355,11 @@ public class MeanLauncher {
 		while(data.hasNextLine()){
 			parseData((String)data.nextLine());
 		}
+		
 	}
+
+
+	
 }
 
 
