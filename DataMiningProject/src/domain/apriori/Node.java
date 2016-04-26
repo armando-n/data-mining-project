@@ -311,20 +311,18 @@ public class Node {
         }
         
         // there are more items to choose, and this is a hash node
-        else
-            countCandidatesInChildren(generateNextCombinations(chosenItems, remainingItems));
-    }
-    
-    /** Takes the next combinations and passes them to the appropriate children to be counted in the tree **/
-    private void countCandidatesInChildren(List<ItemSet[]> nextCombinations) {
-        for (ItemSet[] nextComb : nextCombinations) {
-            
-            // hash the current item to determine which child node to pass the new combination on to
-            int hashResult = hash(nextComb[INDEX_CHOSEN].last());
-            
-            // now pass it down
-            if (this.children[hashResult] != null)
-                this.children[hashResult].countCandidates(nextComb[INDEX_CHOSEN], nextComb[INDEX_REMAINING]);
+        else {
+            // generate next combinations and pass them to the appropriate children to be counted in the tree
+            List<ItemSet[]> nextCombinations = generateNextCombinations(chosenItems, remainingItems);
+            for (ItemSet[] nextComb : nextCombinations) {
+                
+                // hash the current item to determine which child node to pass the new combination on to
+                int hashResult = hash(nextComb[INDEX_CHOSEN].last());
+                
+                // now pass it down
+                if (this.children[hashResult] != null)
+                    this.children[hashResult].countCandidates(nextComb[INDEX_CHOSEN], nextComb[INDEX_REMAINING]);
+            }
         }
     }
     

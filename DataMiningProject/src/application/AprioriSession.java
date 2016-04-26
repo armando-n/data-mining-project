@@ -44,11 +44,12 @@ public class AprioriSession {
         return aprioriSession;
     }
     
-    /** Runs the apriori algorithm with the specified parameters. Default values can be used for everything except the input file.
+    /** Runs the apriori algorithm with the specified parameters.
+     * Default values can be used for everything except the input file and minimum support.
      * @param inFile The input file containing the data the apriori algorithm will be run on.
      * @param delimiter The delimiter used in the input file to separate attributes. If null, a default value is used.
      * @param outFile The file to write the algorithm's output to. If null, a default value is used.
-     * @param minSup The absolute minimum support required for an itemset to be considered frequent. If null, a default value is used.
+     * @param minSup The absolute minimum support required for an itemset to be considered frequent.
      * @param maxBucketSize The maximum bucket size of bucket nodes in the generated hash trees. If null, a default value is used.
      * @param children The number of children per node in the generated hash trees. If null, a default value is used.
      */
@@ -95,14 +96,12 @@ public class AprioriSession {
     }
     
     /** Attempts to read from this.inputFile and generate the list of this.transactions.
-     * If the input file cannot be found, an error message is printed and the method returns. **/
+     * If the input file cannot be found, an exception is thrown.
+     * @throws FileNotFoundException When this.inputFile cannot be found (invalid filename specified).**/
     private void readAprioriInput() throws FileNotFoundException {
         Scanner fileScan = null;
         Scanner lineScan = null;
         ItemSet itemSet;
-        
-        if (delimiter == null || delimiter.isEmpty())
-            delimiter = DELIMITER_DEFAULT;
         
         try {
         
@@ -135,7 +134,7 @@ public class AprioriSession {
     }
 
     /** Attempts to write the algorithm's output to this.outputFile.
-     * If the output file cannot be found, an error message is printed and the method returns. **/
+     * @throws IOException When the output file cannot be written to for some reason. **/
     private void writeOutput() throws IOException {
         BufferedWriter writer = null;
         try {
@@ -161,7 +160,7 @@ public class AprioriSession {
      * If delimiter is null, a default value is used.
      * @return A delimiter regular expression. **/
     private String whichDelimiter(String delimiter) {
-        if (delimiter == null)
+        if (delimiter == null || delimiter.isEmpty())
             return DELIMITER_DEFAULT;
         if (delimiter.equalsIgnoreCase("comma"))
             return ",\\s*";
