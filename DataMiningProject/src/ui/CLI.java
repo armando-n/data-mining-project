@@ -9,6 +9,7 @@ import org.apache.commons.cli.ParseException;
 
 import application.AprioriSession;
 import application.ID3Session;
+import domain.xmeans.MeanLauncher;
 
 public class CLI {
     private static final String PROGRAM_NAME = "dm-proj";
@@ -39,6 +40,9 @@ public class CLI {
     private static final String OPT_LABEL_INDEX_L = "label-index";
     private static final String OPT_TESTING_FILE_S = "t";
     private static final String OPT_TESTING_FILE_L = "testing-file";
+    
+    private static final String OPT_MIN_K = "min_k";
+    private static final String OPT_MAX_K = "max_k";
 
     private static Options helpOptions;
     private static Options mainOptions;
@@ -58,8 +62,8 @@ public class CLI {
             apriori();
         else if (algorithm.equalsIgnoreCase("id3") || algorithm.equalsIgnoreCase("i"))
             id3();
-        else if(algorithm.equalsIgnoreCase("kmeans") || algorithm.equalsIgnoreCase("k"))
-            kMeans();
+        else if(algorithm.equalsIgnoreCase("xmeans") || algorithm.equalsIgnoreCase("x"))
+            xMeans();
         else
             err_exit("Unrecognized algorithm specified: " + algorithm);
         
@@ -87,6 +91,9 @@ public class CLI {
         // create id3-specific options
         mainOptions.addOption(Option.builder(OPT_LABEL_INDEX_S).hasArg().argName("label-index").longOpt(OPT_LABEL_INDEX_L).desc("id3: index of class label attribute (required)").build());
         mainOptions.addOption(Option.builder(OPT_TESTING_FILE_S).hasArg().argName("testing-file").longOpt(OPT_TESTING_FILE_L).desc("id3: unlabled data to classify").build());
+        
+        mainOptions.addOption(Option.builder(OPT_MIN_K).hasArg().argName("min-k").longOpt(OPT_MIN_K).desc("xMeans: Lower K bound").build());
+        mainOptions.addOption(Option.builder(OPT_MAX_K).hasArg().argName("max-k").longOpt(OPT_MIN_K).desc("xMeans: Upper K bound").build());
     }
     
     private static void parseCommonOptions(String[] args) {
@@ -150,8 +157,32 @@ public class CLI {
     }
     
     /** Handles the processing of kmeans-specific command line arguments, and sends request to run the algorithm. **/
-    private static void kMeans() {
-        System.out.println("K-means not yet implemented");
+    private static void xMeans() {
+    	String minK = "";
+    	String maxK = "";
+    	
+    	int lowK = 0, highK = 0;
+    	
+    	if(cmd.hasOption(OPT_MIN_K))
+    		minK = cmd.getOptionValue(OPT_MIN_K);
+    	else
+    		help_exit(mainOptions, "X Means needs a lower bound set by using -min_k\n");
+    	
+    	if(cmd.hasOption(OPT_MAX_K))
+    		maxK = cmd.getOptionValue(OPT_MAX_K);
+    	else
+    		help_exit(mainOptions, "X Means needs an upper bound set by using -max_k\n");
+    	
+    	try{
+    		lowK = Integer.parseInt(minK);
+    		highK = Integer.parseInt(maxK);
+    		
+    	}catch(NumberFormatException e){
+    		help_exit(mainOptions, "X Means upper and lower bounds must be integers\n");
+    	}
+    	
+    	MeanLauncher.runXMeans(inputFileName, lowK, highK);
+    		
     }
     
     /** Prints the specified message to standard output and exits with an error return value. **/
