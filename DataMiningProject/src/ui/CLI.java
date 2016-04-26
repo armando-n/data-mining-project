@@ -15,7 +15,7 @@ public class CLI {
     private static final String PROGRAM_NAME = "dm-proj";
     
     // general options
-    private static final String OPTIONS_ORDER = "iahdombclt"; // specifies argument order in help/usage messages
+    private static final String OPTIONS_ORDER = "iahdombcltjk"; // specifies argument order in help/usage messages
     private static final String OPT_ALGORITHM_S = "a";
     private static final String OPT_ALGORITHM_L = "algorithm";
     private static final String OPT_INPUT_FILE_S = "i";
@@ -41,8 +41,11 @@ public class CLI {
     private static final String OPT_TESTING_FILE_S = "t";
     private static final String OPT_TESTING_FILE_L = "testing-file";
     
-    private static final String OPT_MIN_K = "min_k";
-    private static final String OPT_MAX_K = "max_k";
+    // x-means options
+    private static final String OPT_MIN_K_S = "j";
+    private static final String OPT_MIN_K_L = "min-k";
+    private static final String OPT_MAX_K_S = "k";
+    private static final String OPT_MAX_K_L = "max-k";
 
     private static Options helpOptions;
     private static Options mainOptions;
@@ -78,22 +81,23 @@ public class CLI {
         
         // create general options
         mainOptions.addOption(Option.builder(OPT_INPUT_FILE_S).required().hasArg().argName("infile").longOpt(OPT_INPUT_FILE_L).desc("the file with data to run algorithm on").build());
-        mainOptions.addOption(Option.builder(OPT_ALGORITHM_S).required().hasArg().argName("algorithm").longOpt(OPT_ALGORITHM_L).desc("the algorithm to run on the specified input").build());
+        mainOptions.addOption(Option.builder(OPT_ALGORITHM_S).required().hasArg().argName("algorithm").longOpt(OPT_ALGORITHM_L).desc("algorithm to run on input file").build());
         mainOptions.addOption(Option.builder(OPT_OUTPUT_FILE_S).hasArg().argName("outfile").longOpt(OPT_OUTPUT_FILE_L).desc("write output to file").build());
         mainOptions.addOption(Option.builder(OPT_DELIMITER_S).hasArg().argName("delimiter").longOpt(OPT_DELIMITER_L).desc("delimiter separating input attributes").build());
         mainOptions.addOption(Option.builder(OPT_HELP_S).longOpt(OPT_HELP_L).desc("print this message").build());
         
         // create apriori-specific options
         mainOptions.addOption(Option.builder(OPT_MIN_SUP_S).hasArg().argName("min-sup").longOpt(OPT_MIN_SUP_L).desc("apriori: absolute min support (required)").build());
-        mainOptions.addOption(Option.builder(OPT_BUCKET_MAX_S).hasArg().argName("bucket-size").longOpt(OPT_BUCKET_MAX_L).desc("apriori: max bucket size for hash trees").build());
-        mainOptions.addOption(Option.builder(OPT_CHILDREN_PER_NODE_S).hasArg().argName("#-per-node").longOpt(OPT_CHILDREN_PER_NODE_L).desc("apriori: # of children per node in hash trees").build());
+        mainOptions.addOption(Option.builder(OPT_BUCKET_MAX_S).hasArg().argName("bucket-size").longOpt(OPT_BUCKET_MAX_L).desc("apriori: hash tree max bucket size").build());
+        mainOptions.addOption(Option.builder(OPT_CHILDREN_PER_NODE_S).hasArg().argName("#-per-node").longOpt(OPT_CHILDREN_PER_NODE_L).desc("apriori: # of children per node in generated hash trees").build());
         
         // create id3-specific options
         mainOptions.addOption(Option.builder(OPT_LABEL_INDEX_S).hasArg().argName("label-index").longOpt(OPT_LABEL_INDEX_L).desc("id3: index of class label attribute (required)").build());
         mainOptions.addOption(Option.builder(OPT_TESTING_FILE_S).hasArg().argName("testing-file").longOpt(OPT_TESTING_FILE_L).desc("id3: unlabled data to classify").build());
         
-        mainOptions.addOption(Option.builder(OPT_MIN_K).hasArg().argName("min-k").longOpt(OPT_MIN_K).desc("xMeans: Lower K bound").build());
-        mainOptions.addOption(Option.builder(OPT_MAX_K).hasArg().argName("max-k").longOpt(OPT_MIN_K).desc("xMeans: Upper K bound").build());
+        // create x-means-specific options
+        mainOptions.addOption(Option.builder(OPT_MIN_K_S).hasArg().argName("min-k").longOpt(OPT_MIN_K_L).desc("xMeans: lower K bound").build());
+        mainOptions.addOption(Option.builder(OPT_MAX_K_S).hasArg().argName("max-k").longOpt(OPT_MAX_K_L).desc("xMeans: upper K bound").build());
     }
     
     private static void parseCommonOptions(String[] args) {
@@ -156,22 +160,22 @@ public class CLI {
         ID3Session.getSession().run(inputFileName, delimiter, outputFileName, labelIndex, testingFile);
     }
     
-    /** Handles the processing of kmeans-specific command line arguments, and sends request to run the algorithm. **/
+    /** Handles the processing of x-means-specific command line arguments, and sends request to run the algorithm. **/
     private static void xMeans() {
     	String minK = "";
     	String maxK = "";
     	
     	int lowK = 0, highK = 0;
     	
-    	if(cmd.hasOption(OPT_MIN_K))
-    		minK = cmd.getOptionValue(OPT_MIN_K);
+    	if(cmd.hasOption(OPT_MIN_K_S))
+    		minK = cmd.getOptionValue(OPT_MIN_K_S);
     	else
-    		help_exit(mainOptions, "X Means needs a lower bound set by using -min_k\n");
+    		help_exit(mainOptions, "X Means needs a lower bound set by using -min-k\n");
     	
-    	if(cmd.hasOption(OPT_MAX_K))
-    		maxK = cmd.getOptionValue(OPT_MAX_K);
+    	if(cmd.hasOption(OPT_MAX_K_S))
+    		maxK = cmd.getOptionValue(OPT_MAX_K_S);
     	else
-    		help_exit(mainOptions, "X Means needs an upper bound set by using -max_k\n");
+    		help_exit(mainOptions, "X Means needs an upper bound set by using -max-k\n");
     	
     	try{
     		lowK = Integer.parseInt(minK);
