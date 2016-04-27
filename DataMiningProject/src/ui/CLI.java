@@ -15,7 +15,7 @@ public class CLI {
     private static final String PROGRAM_NAME = "dm-proj";
     
     // general options
-    private static final String OPTIONS_ORDER = "iahdombcltjk"; // specifies argument order in help/usage messages
+    private static final String OPTIONS_ORDER = "iahdombcltjkv"; // specifies argument order in help/usage messages
     private static final String OPT_ALGORITHM_S = "a";
     private static final String OPT_ALGORITHM_L = "algorithm";
     private static final String OPT_INPUT_FILE_S = "i";
@@ -46,6 +46,9 @@ public class CLI {
     private static final String OPT_MIN_K_L = "min-k";
     private static final String OPT_MAX_K_S = "k";
     private static final String OPT_MAX_K_L = "max-k";
+    private static final String OPT_VERBOSE_S = "v";
+    private static final String OPT_VERBOSE_L = "verbose";
+    
 
     private static Options helpOptions;
     private static Options mainOptions;
@@ -83,7 +86,7 @@ public class CLI {
         mainOptions.addOption(Option.builder(OPT_INPUT_FILE_S).required().hasArg().argName("infile").longOpt(OPT_INPUT_FILE_L).desc("the file with data to run algorithm on").build());
         mainOptions.addOption(Option.builder(OPT_ALGORITHM_S).required().hasArg().argName("algorithm").longOpt(OPT_ALGORITHM_L).desc("algorithm to run on input file").build());
         mainOptions.addOption(Option.builder(OPT_OUTPUT_FILE_S).hasArg().argName("outfile").longOpt(OPT_OUTPUT_FILE_L).desc("write output to file").build());
-        mainOptions.addOption(Option.builder(OPT_DELIMITER_S).hasArg().argName("delimiter").longOpt(OPT_DELIMITER_L).desc("delimiter separating input attributes").build());
+        mainOptions.addOption(Option.builder(OPT_DELIMITER_S).hasArg().argName("delimiter").longOpt(OPT_DELIMITER_L).desc("delimiter separating input attributes").build());        
         mainOptions.addOption(Option.builder(OPT_HELP_S).longOpt(OPT_HELP_L).desc("print this message").build());
         
         // create apriori-specific options
@@ -98,6 +101,7 @@ public class CLI {
         // create x-means-specific options
         mainOptions.addOption(Option.builder(OPT_MIN_K_S).hasArg().argName("min-k").longOpt(OPT_MIN_K_L).desc("xMeans: lower K bound").build());
         mainOptions.addOption(Option.builder(OPT_MAX_K_S).hasArg().argName("max-k").longOpt(OPT_MAX_K_L).desc("xMeans: upper K bound").build());
+        mainOptions.addOption(Option.builder(OPT_VERBOSE_S).argName("delimiter").longOpt(OPT_VERBOSE_L).desc("xmeans: verbose (however, 10 per points cluster max shown)").build());
     }
     
     private static void parseCommonOptions(String[] args) {
@@ -164,7 +168,7 @@ public class CLI {
     private static void xMeans() {
     	String minK = "";
     	String maxK = "";
-    	
+    	boolean verbose = false;
     	int lowK = 0, highK = 0;
     	
     	if(cmd.hasOption(OPT_MIN_K_S))
@@ -177,6 +181,9 @@ public class CLI {
     	else
     		help_exit(mainOptions, "X Means needs an upper bound set by using -max-k\n");
     	
+    	if(cmd.hasOption(OPT_VERBOSE_S))
+    		verbose = true;
+    	
     	try{
     		lowK = Integer.parseInt(minK);
     		highK = Integer.parseInt(maxK);
@@ -185,7 +192,7 @@ public class CLI {
     		help_exit(mainOptions, "X Means upper and lower bounds must be integers\n");
     	}
     	
-    	MeanLauncher.runXMeans(inputFileName, lowK, highK);
+    	MeanLauncher.runXMeans(inputFileName, lowK, highK, verbose, outputFileName);
     		
     }
     
