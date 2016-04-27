@@ -10,6 +10,8 @@ package domain.xmeans;
 import java.awt.Point;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Random;
@@ -27,9 +29,13 @@ public class MeanLauncher {
 	//indicator for k mean
 	private static boolean changed = true;
 	
+	//verbose flag
+	private static boolean verbose = false;
+	
 	//For randomly adding centroids, the max for x and y to set
 	private static double maxX = 0.0, maxY = 0.0;
-	private static File in;		
+	private static File in;
+	private static FileOutputStream myOut;
 	
 	/**
 	 * This is the main driver for xmeans
@@ -37,10 +43,26 @@ public class MeanLauncher {
 	 * @param kLow the lower bound for K
 	 * @param kHigh the upperbound for K
 	 */
-	public static void runXMeans(String dataSet, int kLow, int kHigh){
+	public static void runXMeans(String dataSet, int kLow, int kHigh, boolean toVerbose, String outputName){
 		clusters = new ArrayList<SubCluster>();
 		centers	= new ArrayList<Centroid>();
 		allPoints = new ArrayList<ClusterPoint>();
+		verbose = toVerbose;
+		
+		
+			try {
+				if(outputName != null && !outputName.equals(""))
+					myOut = new FileOutputStream(outputName);
+				else
+					myOut = null;
+				
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		
+		if(kHigh - kLow < 0)
+			throw new IllegalArgumentException();
 		
 		in = new File(dataSet);
 		int currK = kLow, actualK = kLow;
@@ -74,11 +96,32 @@ public class MeanLauncher {
 
 	
 	private static void printResult(int actualK) {
+		int count = 0;
+		
+		if(myOut!= null)
+			System.setOut(new PrintStream(myOut));
+		
+		if(verbose){
+			for(SubCluster sb : clusters){
+				Centroid c = centers.get(count);
+				System.out.println("Cluster " + c.getID()  + " has the points");
+				for(int i = 0; i < sb.getPoints().size() && i < 10; i++){
+					System.out.println(sb.getPoints().get(i).getX() + " " + sb.getPoints().get(i).getX());					
+				}
+				
+				System.out.println("...");
+				
+				count++;
+			}
+			System.out.println("");
+		}
 		System.out.println("The dataset has an estimated K of " + actualK + ".\n");
 		System.out.println("With the estimated centroids: ");
 		for(Centroid c : centers){
 			System.out.println("\t" + c);
 		}
+		
+		
 	}
 
 	
