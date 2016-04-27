@@ -15,7 +15,7 @@ public class CLI {
     private static final String PROGRAM_NAME = "dm-proj";
     
     // general options
-    private static final String OPTIONS_ORDER = "iahdvombcltjkv"; // specifies argument order in help/usage messages
+    private static final String OPTIONS_ORDER = "iahdombcltjkv"; // specifies argument order in help/usage messages
     private static final String OPT_ALGORITHM_S = "a";
     private static final String OPT_ALGORITHM_L = "algorithm";
     private static final String OPT_INPUT_FILE_S = "i";
@@ -101,7 +101,7 @@ public class CLI {
         // create x-means-specific options
         mainOptions.addOption(Option.builder(OPT_MIN_K_S).hasArg().argName("min-k").longOpt(OPT_MIN_K_L).desc("xMeans: lower K bound").build());
         mainOptions.addOption(Option.builder(OPT_MAX_K_S).hasArg().argName("max-k").longOpt(OPT_MAX_K_L).desc("xMeans: upper K bound").build());
-        mainOptions.addOption(Option.builder(OPT_VERBOSE_S).hasArg().argName("delimiter").longOpt(OPT_VERBOSE_L).desc("xmeans: verbose").build());
+        mainOptions.addOption(Option.builder(OPT_VERBOSE_S).argName("delimiter").longOpt(OPT_VERBOSE_L).desc("xmeans: verbose (however, 10 per points cluster max shown)").build());
     }
     
     private static void parseCommonOptions(String[] args) {
